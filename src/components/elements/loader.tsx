@@ -1,0 +1,17 @@
+import { Dot, Loader as LuLoader } from "lucide-react";
+
+export default function Loader({ size = 64, tailwind = "" }) {
+  return <div className="flex-1 cu-flex-center">
+    <LuLoader className={"animate-spin " + tailwind} size={size} />
+  </div>;
+}
+
+export const FullPageLoader = () => <Loader tailwind="text-primary-foreground dark:text-primary" />;
+
+export const DotsLoader = () => {
+  return <div className='flex justify-center items-center gap-1.5'>
+    <div className='w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]' />
+    <div className='w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]' />
+    <div className='w-1 h-1 bg-primary rounded-full animate-bounce' />
+  </div>
+}
