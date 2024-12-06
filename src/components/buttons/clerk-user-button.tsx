@@ -39,7 +39,7 @@ const ClerkUserButton = () => {
                 elements: {
                   userPreview: "bg-muted",
                   userButtonPopoverCard: "border border-primary-foreground/20 dark:border-foreground/20",
-                  userButtonPopoverActionButton: "bg-muted hover:dark:bg-[#383433] disabled:dark:bg-background focus:dark:bg-[#383433] font-bold",
+                  userButtonPopoverActionButton: "bg-muted hover:dark:bg-[#383433] disabled:dark:bg-background focus:dark:bg-[#383433]",
                   userButtonPopoverActionButtonIcon: "h-5 w-5",
                   // userButtonPopoverCustomItemButton: "^ should have the same styling as userButtonPopoverActionButton if you want to use it",
                 }

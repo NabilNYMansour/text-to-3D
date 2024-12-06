@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import { ClerkProvider } from '@clerk/nextjs'
-import localFont from 'next/font/local';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import SearchBar from "@/components/elements/search-bar";
 import ClerkUserButton from "@/components/buttons/clerk-user-button";
-import { NotificationButton } from "@/components/buttons/notification-button";
 
-const font = localFont({ src: '../../public/CaviarDreams.ttf' });
+import { Geologica } from "next/font/google"
+import { ThemeToggle } from "@/components/buttons/theme-toggle";
+import LinkButton from "@/components/buttons/link-button";
+import { CirclePlus } from "lucide-react";
+const font = Geologica({ weight: "400", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -34,11 +35,13 @@ export default function RootLayout({
             <SidebarProvider>
               <AppSidebar />
               <SidebarInset className="overflow-hidden">
-                <header className="flex items-center justify-between border-b gap-2 p-2">
+                <header className="flex items-center justify-between gap-2 p-2">
                   <SidebarTrigger />
+                  <ThemeToggle variant="ghost" />
                   <div className="flex-1 flex justify-end items-center gap-2">
-                    <SearchBar />
-                    <div><NotificationButton className="cu-shadow" /></div>
+                    <LinkButton href="/project" variant="outline" className="cu-shadow">
+                      <CirclePlus />New Project
+                    </LinkButton>
                     <div><ClerkUserButton /></div>
                   </div>
                 </header>

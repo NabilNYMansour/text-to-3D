@@ -47,7 +47,7 @@ async function Page() {
             menuList: "bg-muted rounded-md",
             menuItem: "bg-muted rounded-md hover:bg-[#383433]",
             navbar: "bg-background rounded-md",
-            navbarButton: "font-bold rounded-md",
+            navbarButton: "rounded-md",
           },
         }}
       >
@@ -72,7 +72,7 @@ async function Page() {
               </div>
               <div>
                 <PricingDialog>
-                  <Button className="font-bold my-2">
+                  <Button className="my-2">
                     Manage Membership
                   </Button>
                 </PricingDialog>

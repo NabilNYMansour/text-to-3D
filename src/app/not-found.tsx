@@ -10,7 +10,7 @@ export default function NotFound() {
       <div className='text-muted-foreground text-center'>I don&apos;t know what you&apos;re looking for</div>
       <div>
         <Link key="Home" href="/">
-          <Button variant="secondary" className='font-bold border'>
+          <Button variant="secondary" className='border'>
             Back to Home
           </Button>
         </Link>

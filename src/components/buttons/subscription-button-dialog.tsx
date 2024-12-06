@@ -19,7 +19,7 @@ const SubscriptionButtonDialog = () => {
 
   return (
     <PricingDialog>
-      <Button className={cn("font-bold w-full justify-start text-sm px-2", getPricingButtonTailwind(subscriptionButtonText))}
+      <Button className={cn("w-full justify-start text-sm px-2", getPricingButtonTailwind(subscriptionButtonText))}
         variant={getPricingButtonVariant(subscriptionButtonText)}
         disabled={!user.isLoaded}
         size="sm"

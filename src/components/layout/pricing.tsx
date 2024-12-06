@@ -68,7 +68,7 @@ const pricingPlans: PricingPlan[] = [
       "Asset uploads up to 20GB",
       "Advanced exporting options",
     ],
-    saveBadgeTailwind: "font-bold bg-gradient-to-r from-orange-700 to-orange-500 text-primary shadow-orange-500 shadow-[0_0_10px_2px] ",
+    saveBadgeTailwind: "bg-gradient-to-r from-orange-700 to-orange-500 text-primary shadow-orange-500 shadow-[0_0_10px_2px] ",
     everythingInPreviousText: "Everything in Basic, plus:",
     cardTailwind: "border-orange-500 shadow-[0_0_20px_2px] shadow-orange-500 bg-orange-100 dark:bg-yellow-900 ",
     buttonTailwind: "bg-orange-500 hover:bg-orange-600 text-white ",

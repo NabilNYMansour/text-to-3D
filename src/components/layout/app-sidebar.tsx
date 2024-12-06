@@ -5,53 +5,18 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar"
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { CirclePlus, Home, Images, LogIn, LogOut, Mail, Paintbrush, ScrollText, Settings } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { FullPageLoader } from "../elements/loader";
 import SubscriptionButtonDialog from "../buttons/subscription-button-dialog";
-import { ThemeToggle } from "../buttons/theme-toggle";
-
-const Title = () => {
-  const [hovering, setHovering] = useState(false);
-
-  return (
-    <Link href="/">
-      <div className="flex items-center hover:contrast-125 transition-all duration-100 cursor-pointer"
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => setHovering(false)}
-      >
-        <div className="relative">
-          <div className="h-[37px] w-[37px] cu-flex-center">
-            <div
-              className={
-                `bg-primary rounded-full h-5 w-5
-                transition-shadow duration-100 opacity-20
-                ${hovering ? "shadow-[0_0_10px_10px] shadow-primary" : ""}`
-              }
-            />
-          </div>
-          <div className="absolute inset-0 cu-flex-center">
-            <Image src="/logo-big.png" alt="Shader Zone Logo" width={50} height={50} />
-          </div>
-        </div>
-        <h1 className={`text-xl font-extrabold text-primary-foreground dark:text-primary ${hovering ? "text-shadow" : ""}`}>
-          Shading Zone
-        </h1>
-      </div>
-    </Link>
-  );
-}
+import ThreeDText from "../ui/3d-text";
 
 const data = {
   navMain: [
@@ -65,23 +30,16 @@ const data = {
           showSignedOut: true,
         },
         {
-          title: "New Shader",
-          url: "/shader",
+          title: "New Project",
+          url: "/project",
           icon: <CirclePlus />,
           showSignedIn: true,
           showSignedOut: true,
         },
         {
-          title: "My Shaders",
-          url: "/my-shaders",
+          title: "My Projects",
+          url: "/my-projects",
           icon: <Paintbrush />,
-          showSignedIn: true,
-          showSignedOut: false,
-        },
-        {
-          title: "My Assets",
-          url: "/my-assets",
-          icon: <Images />,
           showSignedIn: true,
           showSignedOut: false,
         },
@@ -142,9 +100,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar {...props}>
-      <SidebarHeader className="flex flex-row items-center justify-between p-2 border-b border-transparent">
-        <Title />
-        <ThemeToggle variant="ghost"/>
+      <SidebarHeader className="flex flex-row items-center py-4 border-b border-transparent">
+        <Link href="/"><ThreeDText text="Text to 3D" className="text-4xl hover:bg-muted p-4 rounded-md" /></Link>
       </SidebarHeader>
       <SidebarContent className="flex flex-col justify-between">
         {isLoaded ? data.navMain.map((item, index) => (
@@ -159,7 +116,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       ) : (
                         <SidebarMenuItem>
                           <SidebarMenuButton asChild isActive={item.url === pathname}>
-                            <Link href={item.url} className="!font-bold">{item.icon}{item.title}</Link>
+                            <Link href={item.url}>{item.icon}{item.title}</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       )}
@@ -171,7 +128,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         )) : <FullPageLoader />}
       </SidebarContent>
-      {/* <SidebarRail /> */}
     </Sidebar>
   )
 }

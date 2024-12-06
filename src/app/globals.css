@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  font-size: 1.05rem;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;

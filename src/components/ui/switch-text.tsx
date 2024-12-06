@@ -25,10 +25,10 @@ const SwitchText = React.forwardRef<
           "pointer-events-none block h-9 w-[118px] border border-muted rounded-full bg-background ring-0 transition-transform data-[state=checked]:translate-x-[118px] data-[state=unchecked]:translate-x-0"
         )}
       />
-      <span className="absolute left-0 w-[118px] text-sm font-bold text-foreground z-10 px-3 py-1.5 rounded-full">
+      <span className="absolute left-0 w-[118px] text-sm text-foreground z-10 px-3 py-1.5 rounded-full">
         {leftLabel}
       </span>
-      <span className="absolute right-0 w-[118px] text-sm font-bold text-foreground z-10 px-3 py-1.5 rounded-full">
+      <span className="absolute right-0 w-[118px] text-sm text-foreground z-10 px-3 py-1.5 rounded-full">
         {rightLabel}
       </span>
     </SwitchPrimitives.Root>
