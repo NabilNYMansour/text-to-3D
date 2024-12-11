@@ -8,7 +8,7 @@ import {
   OrbitControls, Text3D
 } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
-import { cloneElement, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { cloneElement, Dispatch, SetStateAction, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Box, BrickWall, Camera, Download, Lightbulb, Pencil, Save, SendHorizontal, Settings, Theater, TriangleRight, X } from "lucide-react";
 import PanelAccordion from "@/components/elements/panel-accordion";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +36,6 @@ import {
 import { useClerk } from "@clerk/nextjs";
 import { Input } from "../ui/input";
 import LinkButton from "../buttons/link-button";
-import { useDebouncedState } from "@mantine/hooks";
 import dynamic from "next/dynamic";
 import Loader, { FullPageLoader } from "../elements/loader";
 
@@ -96,7 +95,7 @@ const InputComponent = ({ label, children, className }:
   { label: React.ReactNode, children?: React.ReactNode, className?: string }
 ) => {
   return (
-    <div className={cn("w-full grid grid-cols-2 min-h-8 items-center", className)}>
+    <div className={cn("w-full grid grid-cols-2 items-center", className)}>
       <label className="truncate whitespace-nowrap">
         {label}
       </label>
@@ -223,6 +222,333 @@ const SceneBackground = ({ controls }: { controls: any }) => {
   </>
 }
 
+//=========={ Panels }==========//
+const GeneralPanel = ({ controls, setControls, setControlsDebounced }: {
+  controls: ControlsType,
+  setControls: Dispatch<SetStateAction<ControlsType>>,
+  setControlsDebounced: (newValue: SetStateAction<ControlsType>) => void
+}) => {
+  return <PanelAccordion opened={controls.panels.general.opened}
+    onPanelChange={(opened) => setControls({ ...controls, panels: { ...controls.panels, general: { opened } } })}
+    title={<div className="cu-flex-center gap-2">
+      <Settings className="w-4 h-4" />
+      <label className="text-base hover:cursor-pointer">
+        General
+      </label>
+    </div>}
+  >
+    <InputComponent label="Text" className="flex flex-col gap-1 items-stretch">
+      <Textarea className="w-full" value={controls.text} onChange={(e) => setControls({ ...controls, text: e.target.value })} />
+    </InputComponent>
+    <InputComponent label="Font">
+      <MultiSelect value={controls.font}
+        onChange={(value) => setControls({ ...controls, font: value as FontType })}
+        options={fonts as unknown as string[]}
+      />
+    </InputComponent>
+    <InputComponent label="Extrustion">
+      <Slider min={0.1} max={10} step={0.1} defaultValue={[controls.height.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, height: { ...controls.height, value: value[0] } })}
+      />
+    </InputComponent>
+    <InputComponent label="Curve Segments">
+      <Slider
+        min={1}
+        max={32}
+        step={1}
+        defaultValue={[controls.curveSegments.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, curveSegments: { ...controls.curveSegments, value: value[0] } })}
+      />
+    </InputComponent>
+    <InputComponent label="Size">
+      <Slider
+        min={0.1}
+        max={10}
+        step={0.1}
+        defaultValue={[controls.size.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, size: { ...controls.size, value: value[0] } })}
+      />
+    </InputComponent>
+    <InputComponent label="Line Height">
+      <Slider
+        min={0}
+        max={2}
+        step={0.01}
+        defaultValue={[controls.lineHeight.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, lineHeight: { ...controls.lineHeight, value: value[0] } })}
+      />
+    </InputComponent>
+    <InputComponent label="Letter Spacing">
+      <Slider
+        min={-1}
+        max={1}
+        step={0.01}
+        defaultValue={[controls.letterSpacing.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, letterSpacing: { ...controls.letterSpacing, value: value[0] } })}
+      />
+    </InputComponent>
+  </PanelAccordion>
+}
+const MaterialPanel = ({ controls, setControls, setMaterialPanelOpened, material }: {
+  controls: ControlsType,
+  setControls: Dispatch<SetStateAction<ControlsType>>,
+  setMaterialPanelOpened: Dispatch<SetStateAction<boolean>>,
+  material: React.ReactElement
+}) => {
+  return <PanelAccordion opened={controls.panels.material.opened}
+    onPanelChange={(opened) => setMaterialPanelOpened(opened)}
+    title={<div className="cu-flex-center gap-2">
+      <BrickWall className="w-4 h-4" />
+      <label className="text-base hover:cursor-pointer">
+        Material
+      </label>
+    </div>}
+  >
+    <InputComponent label="Type">
+      <MultiSelect value={controls.material}
+        onChange={(value) => setControls({ ...controls, material: value as MaterialType })}
+        options={materials as unknown as string[]}
+      />
+    </InputComponent>
+    {controls.material === "Gradient Material" &&
+      <InputComponent label="Shading Only">
+        <Switch checked={controls.colorOnly} onCheckedChange={(checked) => setControls({ ...controls, colorOnly: checked })} />
+      </InputComponent>}
+    {material.props.color &&
+      <InputComponent label="Color">
+        <ColorPicker value={controls.color} onChange={(value) => setControls({ ...controls, color: value })} />
+      </InputComponent>}
+    {material.props.secondColor &&
+      <InputComponent label="Color 2">
+        <ColorPicker value={controls.secondColor} onChange={(value) => setControls({ ...controls, secondColor: value })} />
+      </InputComponent>}
+    {material.props.roughness &&
+      <InputComponent label="Roughness">
+        <Slider
+          min={0}
+          max={1}
+          step={0.01}
+          defaultValue={[controls.roughness.value]}
+          onValueChange={(value) => setControls({ ...controls, roughness: { ...controls.roughness, value: value[0] } })}
+        />
+      </InputComponent>}
+    {material.props.metalness &&
+      <InputComponent label="Metalness">
+        <Slider
+          min={0}
+          max={1}
+          step={0.01}
+          defaultValue={[controls.metalness.value]}
+          onValueChange={(value) => setControls({ ...controls, metalness: { ...controls.metalness, value: value[0] } })}
+        />
+      </InputComponent>}
+  </PanelAccordion>
+}
+const BevelPanel = ({ controls, setControls, setControlsDebounced }: {
+  controls: ControlsType,
+  setControls: Dispatch<SetStateAction<ControlsType>>,
+  setControlsDebounced: (newValue: SetStateAction<ControlsType>) => void
+}) => {
+  return <PanelAccordion opened={controls.panels.bevel.opened}
+    onPanelChange={(opened) => setControls({ ...controls, panels: { ...controls.panels, bevel: { opened } } })}
+    title={<div className="cu-flex-center gap-2">
+      <TriangleRight className="w-4 h-4" />
+      <label className="text-base hover:cursor-pointer">
+        Bevel
+      </label>
+    </div>}
+  >
+    <InputComponent label="Bevel Enabled">
+      <Switch checked={controls.bevelEnabled} onCheckedChange={(checked) => setControls({ ...controls, bevelEnabled: checked })} />
+    </InputComponent>
+    <InputComponent label="Offset">
+      <Slider
+        min={0}
+        max={1}
+        step={0.01}
+        defaultValue={[controls.bevelOffset.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, bevelOffset: { ...controls.bevelOffset, value: value[0] } })}
+      />
+    </InputComponent>
+    <InputComponent label="Segments">
+      <Slider
+        min={1}
+        max={32}
+        step={1}
+        defaultValue={[controls.bevelSegments.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, bevelSegments: { ...controls.bevelSegments, value: value[0] } })}
+      />
+    </InputComponent>
+    <InputComponent label="Size">
+      <Slider
+        min={0}
+        max={1}
+        step={0.01}
+        defaultValue={[controls.bevelSize.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, bevelSize: { ...controls.bevelSize, value: value[0] } })}
+      />
+    </InputComponent>
+    <InputComponent label="Thickness">
+      <Slider
+        min={0}
+        max={1}
+        step={0.01}
+        defaultValue={[controls.bevelThickness.value]}
+        onValueChange={(value) => setControlsDebounced({ ...controls, bevelThickness: { ...controls.bevelThickness, value: value[0] } })}
+      />
+    </InputComponent>
+  </PanelAccordion>
+}
+const LightPanel = ({ controls, setControls }: {
+  controls: ControlsType,
+  setControls: Dispatch<SetStateAction<ControlsType>>,
+}) => {
+  return <PanelAccordion opened={controls.panels.light.opened}
+    onPanelChange={(opened) => setControls({ ...controls, panels: { ...controls.panels, light: { opened } } })}
+    title={<div className="cu-flex-center gap-2">
+      <Lightbulb className="w-4 h-4" />
+      <label className="text-base hover:cursor-pointer">
+        Light
+      </label>
+    </div>}
+  >
+    <InputComponent label="Light Enabled">
+      <Switch checked={controls.lightEnabled} onCheckedChange={(checked) => setControls({ ...controls, lightEnabled: checked })} />
+    </InputComponent>
+    {controls.lightEnabled ? <>
+      <InputComponent label="Intensity">
+        <Slider
+          min={0}
+          max={2}
+          step={0.01}
+          defaultValue={[controls.light.intensity]}
+          onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, intensity: value[0] } })}
+        />
+      </InputComponent>
+      <InputComponent label="Color">
+        <ColorPicker value={controls.light.color} onChange={(value) => setControls({ ...controls, light: { ...controls.light, color: value } })} />
+      </InputComponent>
+      <InputComponent label="Light X position">
+        <Slider
+          min={controls.light.minMax[0][0]}
+          max={controls.light.minMax[0][1]}
+          step={controls.light.step}
+          defaultValue={[controls.light.position[0]]}
+          onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [value[0], controls.light.position[1], controls.light.position[2]] } })}
+        />
+      </InputComponent>
+      <InputComponent label="Light Y position">
+        <Slider
+          min={controls.light.minMax[1][0]}
+          max={controls.light.minMax[1][1]}
+          step={controls.light.step}
+          defaultValue={[controls.light.position[1]]}
+          onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [controls.light.position[0], value[0], controls.light.position[2]] } })}
+        />
+      </InputComponent>
+      <InputComponent label="Light Z position">
+        <Slider
+          min={controls.light.minMax[2][0]}
+          max={controls.light.minMax[2][1]}
+          step={controls.light.step}
+          defaultValue={[controls.light.position[2]]}
+          onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [controls.light.position[0], controls.light.position[1], value[0]] } })}
+        />
+      </InputComponent>
+    </> : <>
+      <InputComponent label="Enable Shadow">
+        <Switch checked={controls.enableVerticalShadow} onCheckedChange={(checked) => setControls({ ...controls, enableVerticalShadow: checked })} />
+      </InputComponent>
+      {controls.enableVerticalShadow &&
+        <InputComponent label="Shadow Offset">
+          <Slider
+            min={-10}
+            max={0}
+            step={0.1}
+            defaultValue={[controls.verticalShadowOffset.value]}
+            onValueChange={(value) => setControls({ ...controls, verticalShadowOffset: { ...controls.verticalShadowOffset, value: value[0] } })}
+          />
+        </InputComponent>}
+    </>}
+  </PanelAccordion>
+}
+const ScenePanel = ({ controls, setControls, setScenePanelOpened }: {
+  controls: ControlsType,
+  setControls: Dispatch<SetStateAction<ControlsType>>,
+  setScenePanelOpened: Dispatch<SetStateAction<boolean>>,
+}) => {
+  return <PanelAccordion opened={controls.panels.scene.opened}
+  onPanelChange={(opened) => setScenePanelOpened(opened)}
+    title={<div className="cu-flex-center gap-2">
+      <Theater className="w-4 h-4" />
+      <label className="text-base hover:cursor-pointer">
+        Scene
+      </label>
+    </div>}
+  >
+    <InputComponent label="Perspective Camera">
+      <Switch checked={controls.perspective} onCheckedChange={(checked) => setControls({ ...controls, perspective: checked })} />
+    </InputComponent>
+    <InputComponent label="Enviroment">
+      <MultiSelect value={controls.preset}
+        onChange={(value) => setControls({ ...controls, preset: value as EnvironmentPresetType })}
+        options={environmentPresets as unknown as string[]}
+      />
+    </InputComponent>
+    <InputComponent label="Background">
+      <MultiSelect value={controls.background}
+        onChange={(value) => setControls({ ...controls, background: value as EnvironmentBackgroundType })}
+        options={controls.perspective ? environmentBackgrounds as unknown as string[] : environmentBackgroundsOrthographic as unknown as string[]}
+      />
+    </InputComponent>
+    {(controls.background === "Color" || controls.background === "Gradient") &&
+      <InputComponent label="Color">
+        <ColorPicker value={controls.backgroundColor} onChange={(value) => setControls({ ...controls, backgroundColor: value })} />
+      </InputComponent>}
+    {controls.background === "Gradient" &&
+      <InputComponent label="Color 2">
+        <ColorPicker value={controls.secondBackgroundColor} onChange={(value) => setControls({ ...controls, secondBackgroundColor: value })} />
+      </InputComponent>}
+    {controls.background === "Gradient" &&
+      <InputComponent label="Angle">
+        <Slider
+          min={controls.gradientAngle.min}
+          max={controls.gradientAngle.max}
+          step={controls.gradientAngle.step}
+          defaultValue={[controls.gradientAngle.value]}
+          onValueChange={(value) => setControls({ ...controls, gradientAngle: { ...controls.gradientAngle, value: value[0] } })}
+        />
+      </InputComponent>}
+    <InputComponent label="Backdrop Enabled">
+      <Switch checked={controls.backdropEnabled} onCheckedChange={(checked) => setControls({ ...controls, backdropEnabled: checked })} />
+    </InputComponent>
+    {controls.backdropEnabled &&
+      <>
+        <InputComponent label="Color">
+          <ColorPicker value={controls.backdropColor} onChange={(value) => setControls({ ...controls, backdropColor: value })} />
+        </InputComponent>
+        <InputComponent label="Roughness">
+          <Slider
+            min={0}
+            max={1}
+            step={0.01}
+            defaultValue={[controls.backdropRoughness.value]}
+            onValueChange={(value) => setControls({ ...controls, backdropRoughness: { ...controls.backdropRoughness, value: value[0] } })}
+          />
+        </InputComponent>
+        <InputComponent label="Metalness">
+          <Slider
+            min={0}
+            max={1}
+            step={0.01}
+            defaultValue={[controls.backdropMetalness.value]}
+            onValueChange={(value) => setControls({ ...controls, backdropMetalness: { ...controls.backdropMetalness, value: value[0] } })}
+          />
+        </InputComponent>
+      </>}
+  </PanelAccordion>
+}
+
 //=========={ Main App }==========//
 type MainAppProps = {
   name?: string,
@@ -296,9 +622,12 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
       colorOnly: controls.colorOnly,
     });
   }, [material, controls.color, controls.secondColor, controls.roughness.value, controls.metalness.value, controls.colorOnly]);
-  // Error due to using memoized state inside the panel. This fixes it.
+
+  //=========={ Panels Bug fix }==========//
   const [materialPanelOpened, setMaterialPanelOpened] = useState(controls.panels.material.opened);
   useEffect(() => setControls({ ...controls, panels: { ...controls.panels, material: { opened: materialPanelOpened } } }), [materialPanelOpened]);
+  const [scenePanelOpened, setScenePanelOpened] = useState(controls.panels.scene.opened);
+  useEffect(() => setControls({ ...controls, panels: { ...controls.panels, scene: { opened: scenePanelOpened } } }), [scenePanelOpened]);
 
   //=========={ Geometry rerender key }==========//
   const geometryRerenderKey = useMemo(() => {
@@ -368,6 +697,7 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
   const [backendLoading, setBackendLoading] = useState(false);
   const [cannotSave, setCannotSave] = useState(false);
 
+  //=========={ Server Side Actions Effects }==========//
   useEffect(() => {
     setCannotSave(JSON.stringify(controls) === JSON.stringify(initControls));
   }, [controls]);
@@ -389,6 +719,7 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
     return () => clearInterval(autosaveInterval);
   }, [controls, cannotSave, updateControls, user, slug]);
 
+  //=========={ Server Side Actions Component }==========//
   const sceneNameComponent = useMemo(() => {
     if (!name || !slug || !user) {
       return (
@@ -420,47 +751,43 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
       }
     }
 
-    return (
-      <div className="w-full flex justify-between items-center select-text gap-2">
-        {editingName ? (
-          <>
-            <div>
-              <Button variant="destructive" size="icon" onClick={() => setEditingName(false)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <Input
-              type="text"
-              defaultValue={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleNameSave();
-                if (e.key === "Escape") setEditingName(false);
-              }}
-            />
-            <div>
-              <Button variant="outline" size="icon" className="cu-shadow" onClick={handleNameSave}>
-                <SendHorizontal className="w-4 h-4" />
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <h1 className="text-lg font-bold truncate whitespace-nowrap">
-              {newName}
-            </h1>
-            <div className="flex gap-2">
-              <Button variant="outline" className="cu-shadow" size="icon" onClick={() => setEditingName(true)} disabled={backendLoading}>
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button variant="outline" className="cu-shadow" size="icon" onClick={handleControlsSave} disabled={cannotSave || backendLoading}>
-                {backendLoading ? <Loader size={16} /> : <Save className="w-4 h-4" />}
-              </Button>
-            </div>
-          </>
-        )}
+    if (editingName) {
+      return <div className="w-full flex justify-between items-center select-text gap-2">
+        <div>
+          <Button variant="destructive" size="icon" onClick={() => setEditingName(false)}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+        <Input
+          type="text"
+          defaultValue={newName}
+          onChange={(e) => setNewName(e.target.value.trim())}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleNameSave();
+            if (e.key === "Escape") setEditingName(false);
+          }}
+        />
+        <div>
+          <Button variant="outline" size="icon" className="cu-shadow" onClick={handleNameSave}>
+            <SendHorizontal className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
-    );
+    } else {
+      return <div className="w-full flex justify-between items-center select-text gap-2">
+        <h1 className="text-lg font-bold truncate whitespace-nowrap">
+          {newName}
+        </h1>
+        <div className="flex gap-2">
+          <Button variant="outline" className="cu-shadow" size="icon" onClick={() => setEditingName(true)} disabled={backendLoading}>
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button variant="outline" className="cu-shadow" size="icon" onClick={handleControlsSave} disabled={cannotSave || backendLoading}>
+            {backendLoading ? <Loader size={16} /> : <Save className="w-4 h-4" />}
+          </Button>
+        </div>
+      </div>
+    }
   }, [name, slug, user, newName, editingName, backendLoading, updateName, updateControls, controls, cannotSave]);
 
   //=========={ Render }==========//
@@ -470,328 +797,19 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
         {/* //=========={ Scene name }==========// */}
         {sceneNameComponent}
 
-        {/* //=========={ General Panel }==========// */}
-        <PanelAccordion opened={controls.panels.general.opened}
-          onPanelChange={(opened) => setControls({ ...controls, panels: { ...controls.panels, general: { opened } } })}
-          title={<div className="cu-flex-center gap-2">
-            <Settings className="w-4 h-4" />
-            <label className="text-base hover:cursor-pointer">
-              General
-            </label>
-          </div>}
-        >
-          <div className="flex flex-col gap-4">
-            <InputComponent label="Text" className="flex flex-col gap-1 items-stretch">
-              <Textarea className="w-full" value={controls.text} onChange={(e) => setControls({ ...controls, text: e.target.value })} />
-            </InputComponent>
-            <InputComponent label="Font">
-              <MultiSelect value={controls.font}
-                onChange={(value) => setControls({ ...controls, font: value as FontType })}
-                options={fonts as unknown as string[]}
-              />
-            </InputComponent>
-            <InputComponent label="Extrustion">
-              <Slider min={0.1} max={10} step={0.1} defaultValue={[controls.height.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, height: { ...controls.height, value: value[0] } })}
-              />
-            </InputComponent>
-            <InputComponent label="Curve Segments">
-              <Slider
-                min={1}
-                max={32}
-                step={1}
-                defaultValue={[controls.curveSegments.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, curveSegments: { ...controls.curveSegments, value: value[0] } })}
-              />
-            </InputComponent>
-            <InputComponent label="Size">
-              <Slider
-                min={0.1}
-                max={10}
-                step={0.1}
-                defaultValue={[controls.size.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, size: { ...controls.size, value: value[0] } })}
-              />
-            </InputComponent>
-            <InputComponent label="Line Height">
-              <Slider
-                min={0}
-                max={2}
-                step={0.01}
-                defaultValue={[controls.lineHeight.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, lineHeight: { ...controls.lineHeight, value: value[0] } })}
-              />
-            </InputComponent>
-            <InputComponent label="Letter Spacing">
-              <Slider
-                min={-1}
-                max={1}
-                step={0.01}
-                defaultValue={[controls.letterSpacing.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, letterSpacing: { ...controls.letterSpacing, value: value[0] } })}
-              />
-            </InputComponent>
-          </div>
-        </PanelAccordion>
+        {/* //=========={ Panels }==========// */}
+        <GeneralPanel controls={controls} setControls={setControls} setControlsDebounced={setControlsDebounced} />
+        <MaterialPanel controls={controls} setControls={setControls} setMaterialPanelOpened={setMaterialPanelOpened} material={material} />
+        <BevelPanel controls={controls} setControls={setControls} setControlsDebounced={setControlsDebounced} />
+        <LightPanel controls={controls} setControls={setControls} />
+        <ScenePanel controls={controls} setControls={setControls} setScenePanelOpened={setScenePanelOpened} />
 
-        {/* //=========={ Material Panel }==========// */}
-        <PanelAccordion opened={controls.panels.material.opened}
-          onPanelChange={(opened) => setMaterialPanelOpened(opened)}
-          title={<div className="cu-flex-center gap-2">
-            <BrickWall className="w-4 h-4" />
-            <label className="text-base hover:cursor-pointer">
-              Material
-            </label>
-          </div>}
-        >
-          <InputComponent label="Type">
-            <MultiSelect value={controls.material}
-              onChange={(value) => setControls({ ...controls, material: value as MaterialType })}
-              options={materials as unknown as string[]}
-            />
-          </InputComponent>
-          {controls.material === "Gradient Material" &&
-            <InputComponent label="Shading Only">
-              <Switch checked={controls.colorOnly} onCheckedChange={(checked) => setControls({ ...controls, colorOnly: checked })} />
-            </InputComponent>}
-          {material.props.color &&
-            <InputComponent label="Color">
-              <ColorPicker value={controls.color} onChange={(value) => setControls({ ...controls, color: value })} />
-            </InputComponent>}
-          {material.props.secondColor &&
-            <InputComponent label="Color 2">
-              <ColorPicker value={controls.secondColor} onChange={(value) => setControls({ ...controls, secondColor: value })} />
-            </InputComponent>}
-          {material.props.roughness &&
-            <InputComponent label="Roughness">
-              <Slider
-                min={0}
-                max={1}
-                step={0.01}
-                defaultValue={[controls.roughness.value]}
-                onValueChange={(value) => setControls({ ...controls, roughness: { ...controls.roughness, value: value[0] } })}
-              />
-            </InputComponent>}
-          {material.props.metalness &&
-            <InputComponent label="Metalness">
-              <Slider
-                min={0}
-                max={1}
-                step={0.01}
-                defaultValue={[controls.metalness.value]}
-                onValueChange={(value) => setControls({ ...controls, metalness: { ...controls.metalness, value: value[0] } })}
-              />
-            </InputComponent>}
-        </PanelAccordion>
-
-        {/* //=========={ Bevel Panel }==========// */}
-        <PanelAccordion opened={controls.panels.bevel.opened}
-          onPanelChange={(opened) => setControls({ ...controls, panels: { ...controls.panels, bevel: { opened } } })}
-          title={<div className="cu-flex-center gap-2">
-            <TriangleRight className="w-4 h-4" />
-            <label className="text-base hover:cursor-pointer">
-              Bevel
-            </label>
-          </div>}
-        >
-          <div className="flex flex-col gap-4">
-            <InputComponent label="Bevel Enabled">
-              <Switch checked={controls.bevelEnabled} onCheckedChange={(checked) => setControls({ ...controls, bevelEnabled: checked })} />
-            </InputComponent>
-            <InputComponent label="Offset">
-              <Slider
-                min={0}
-                max={1}
-                step={0.01}
-                defaultValue={[controls.bevelOffset.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, bevelOffset: { ...controls.bevelOffset, value: value[0] } })}
-              />
-            </InputComponent>
-            <InputComponent label="Segments">
-              <Slider
-                min={1}
-                max={32}
-                step={1}
-                defaultValue={[controls.bevelSegments.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, bevelSegments: { ...controls.bevelSegments, value: value[0] } })}
-              />
-            </InputComponent>
-            <InputComponent label="Size">
-              <Slider
-                min={0}
-                max={1}
-                step={0.01}
-                defaultValue={[controls.bevelSize.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, bevelSize: { ...controls.bevelSize, value: value[0] } })}
-              />
-            </InputComponent>
-            <InputComponent label="Thickness">
-              <Slider
-                min={0}
-                max={1}
-                step={0.01}
-                defaultValue={[controls.bevelThickness.value]}
-                onValueChange={(value) => setControlsDebounced({ ...controls, bevelThickness: { ...controls.bevelThickness, value: value[0] } })}
-              />
-            </InputComponent>
-          </div>
-        </PanelAccordion>
-
-        {/* //=========={ Light Panel }==========// */}
-        <PanelAccordion opened={controls.panels.light.opened}
-          onPanelChange={(opened) => setControls({ ...controls, panels: { ...controls.panels, light: { opened } } })}
-          title={<div className="cu-flex-center gap-2">
-            <Lightbulb className="w-4 h-4" />
-            <label className="text-base hover:cursor-pointer">
-              Light
-            </label>
-          </div>}
-        >
-          <div className="flex flex-col gap-4">
-            <InputComponent label="Light Enabled">
-              <Switch checked={controls.lightEnabled} onCheckedChange={(checked) => setControls({ ...controls, lightEnabled: checked })} />
-            </InputComponent>
-            {controls.lightEnabled ? <>
-              <InputComponent label="Intensity">
-                <Slider
-                  min={0}
-                  max={2}
-                  step={0.01}
-                  defaultValue={[controls.light.intensity]}
-                  onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, intensity: value[0] } })}
-                />
-              </InputComponent>
-              <InputComponent label="Color">
-                <ColorPicker value={controls.light.color} onChange={(value) => setControls({ ...controls, light: { ...controls.light, color: value } })} />
-              </InputComponent>
-              <InputComponent label="Light X position">
-                <Slider
-                  min={controls.light.minMax[0][0]}
-                  max={controls.light.minMax[0][1]}
-                  step={controls.light.step}
-                  defaultValue={[controls.light.position[0]]}
-                  onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [value[0], controls.light.position[1], controls.light.position[2]] } })}
-                />
-              </InputComponent>
-              <InputComponent label="Light Y position">
-                <Slider
-                  min={controls.light.minMax[1][0]}
-                  max={controls.light.minMax[1][1]}
-                  step={controls.light.step}
-                  defaultValue={[controls.light.position[1]]}
-                  onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [controls.light.position[0], value[0], controls.light.position[2]] } })}
-                />
-              </InputComponent>
-              <InputComponent label="Light Z position">
-                <Slider
-                  min={controls.light.minMax[2][0]}
-                  max={controls.light.minMax[2][1]}
-                  step={controls.light.step}
-                  defaultValue={[controls.light.position[2]]}
-                  onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [controls.light.position[0], controls.light.position[1], value[0]] } })}
-                />
-              </InputComponent>
-            </> : <>
-              <InputComponent label="Enable Shadow">
-                <Switch checked={controls.enableVerticalShadow} onCheckedChange={(checked) => setControls({ ...controls, enableVerticalShadow: checked })} />
-              </InputComponent>
-              {controls.enableVerticalShadow &&
-                <InputComponent label="Shadow Offset">
-                  <Slider
-                    min={-10}
-                    max={0}
-                    step={0.1}
-                    defaultValue={[controls.verticalShadowOffset.value]}
-                    onValueChange={(value) => setControls({ ...controls, verticalShadowOffset: { ...controls.verticalShadowOffset, value: value[0] } })}
-                  />
-                </InputComponent>}
-            </>}
-          </div>
-        </PanelAccordion>
-
-        {/* //=========={ Scene Panel }==========// */}
-        <PanelAccordion opened={controls.panels.scene.opened}
-          onPanelChange={(opened) => setControls({ ...controls, panels: { ...controls.panels, scene: { opened } } })}
-          title={<div className="cu-flex-center gap-2">
-            <Theater className="w-4 h-4" />
-            <label className="text-base hover:cursor-pointer">
-              Scene
-            </label>
-          </div>}
-        >
-          <div className="flex flex-col gap-4">
-            <InputComponent label="Perspective Camera">
-              <Switch checked={controls.perspective} onCheckedChange={(checked) => setControls({ ...controls, perspective: checked })} />
-            </InputComponent>
-            <InputComponent label="Enviroment">
-              <MultiSelect value={controls.preset}
-                onChange={(value) => setControls({ ...controls, preset: value as EnvironmentPresetType })}
-                options={environmentPresets as unknown as string[]}
-              />
-            </InputComponent>
-            <InputComponent label="Background">
-              <MultiSelect value={controls.background}
-                onChange={(value) => setControls({ ...controls, background: value as EnvironmentBackgroundType })}
-                options={controls.perspective ? environmentBackgrounds as unknown as string[] : environmentBackgroundsOrthographic as unknown as string[]}
-              />
-            </InputComponent>
-            {(controls.background === "Color" || controls.background === "Gradient") &&
-              <InputComponent label="Color">
-                <div className="flex gap-1">
-                  {/* <ColorPicker withTextInput={!material.props.secondColor} value={controls.color} onChange={(value) => setControls({ ...controls, color: value })} /> */}
-                  <ColorPicker value={controls.backgroundColor} onChange={(value) => setControls({ ...controls, backgroundColor: value })} />
-                  {/* {material.props.secondColor &&
-                    <ColorPicker withTextInput={false} value={controls.secondColor} onChange={(value) => setControls({ ...controls, secondColor: value })} />} */}
-                </div>
-              </InputComponent>}
-            {controls.background === "Gradient" &&
-              <InputComponent label="Color 2">
-                <ColorPicker value={controls.secondBackgroundColor} onChange={(value) => setControls({ ...controls, secondBackgroundColor: value })} />
-              </InputComponent>}
-            {controls.background === "Gradient" &&
-              <InputComponent label="Angle">
-                <Slider
-                  min={controls.gradientAngle.min}
-                  max={controls.gradientAngle.max}
-                  step={controls.gradientAngle.step}
-                  defaultValue={[controls.gradientAngle.value]}
-                  onValueChange={(value) => setControls({ ...controls, gradientAngle: { ...controls.gradientAngle, value: value[0] } })}
-                />
-              </InputComponent>}
-            <InputComponent label="Backdrop Enabled">
-              <Switch checked={controls.backdropEnabled} onCheckedChange={(checked) => setControls({ ...controls, backdropEnabled: checked })} />
-            </InputComponent>
-            {controls.backdropEnabled &&
-              <>
-                <InputComponent label="Color">
-                  <ColorPicker value={controls.backdropColor} onChange={(value) => setControls({ ...controls, backdropColor: value })} />
-                </InputComponent>
-                <InputComponent label="Roughness">
-                  <Slider
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    defaultValue={[controls.backdropRoughness.value]}
-                    onValueChange={(value) => setControls({ ...controls, backdropRoughness: { ...controls.backdropRoughness, value: value[0] } })}
-                  />
-                </InputComponent>
-                <InputComponent label="Metalness">
-                  <Slider
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    defaultValue={[controls.backdropMetalness.value]}
-                    onValueChange={(value) => setControls({ ...controls, backdropMetalness: { ...controls.backdropMetalness, value: value[0] } })}
-                  />
-                </InputComponent>
-              </>}
-          </div>
-        </PanelAccordion>
+        {/* //=========={ Reset and Export }==========// */}
       </div>
 
       <div className="relative h-[100%] min-h-[50vh] md:w-[80%] p-4 cu-flex-center flex-col gap-2">
         {/* //=========={ Scene }==========// */}
-        <Suspense fallback={<Skeleton className="w-full h-full" />}>
+        <Suspense fallback={<Skeleton className="w-full h-full bg-muted" />}>
           {sceneActionsComponent}
           <Canvas shadows
             className="rounded-md bg-background transition-opacity duration-300"
