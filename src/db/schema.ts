@@ -1,4 +1,5 @@
-import { date, integer, pgEnum, pgTable, varchar } from "drizzle-orm/pg-core";
+import { ControlsType, defaultControls } from "@/lib/constants";
+import { date, integer, pgEnum, pgTable, varchar, jsonb } from "drizzle-orm/pg-core";
 
 export const subscriptionEnum = pgEnum('subscription_enum', ['free', 'basic', 'premium']);
 export const usersTable = pgTable("users", {
@@ -12,3 +13,15 @@ export const usersTable = pgTable("users", {
 
 export type InsertUser = typeof usersTable.$inferInsert;
 export type SelectUser = typeof usersTable.$inferSelect;
+
+export const projectsTable = pgTable("projects", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  clerkId: varchar({ length: 255 }).notNull().references(() => usersTable.clerkId),
+  name: varchar({ length: 255 }).notNull(),
+  payload: jsonb().$type<ControlsType>().notNull().default(defaultControls),
+  slug: varchar({ length: 255 }).notNull(),
+  createAt: date().notNull().default("now()"),
+});
+
+export type InsertProject = typeof projectsTable.$inferInsert;
+export type SelectProject = typeof projectsTable.$inferSelect;

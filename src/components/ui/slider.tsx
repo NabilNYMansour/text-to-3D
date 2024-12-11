@@ -26,6 +26,12 @@ const Slider = React.forwardRef<
       "block h-4 w-4 rounded-full border border-primary/50 bg-primary shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-grab active:cursor-grabbing",
       props.disabled ? "!cursor-not-allowed" : ""
     )} />
+    {props.defaultValue?.map((_, i) => (
+      <SliderPrimitive.Thumb key={i} className={cn(
+        "block h-4 w-4 rounded-full border border-primary/50 bg-primary shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-grab active:cursor-grabbing",
+        props.disabled ? "!cursor-not-allowed" : ""
+      )} />
+    ))}
   </SliderPrimitive.Root>
 ))
 Slider.displayName = SliderPrimitive.Root.displayName

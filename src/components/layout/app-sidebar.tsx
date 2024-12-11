@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CirclePlus, Home, Images, LogIn, LogOut, Mail, Paintbrush, ScrollText, Settings } from "lucide-react";
+import { Box, CirclePlus, Home, Images, LogIn, LogOut, Mail, Paintbrush, ScrollText, Settings } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { FullPageLoader } from "../elements/loader";
 import SubscriptionButtonDialog from "../buttons/subscription-button-dialog";
@@ -29,17 +29,17 @@ const data = {
           showSignedIn: true,
           showSignedOut: true,
         },
-        {
-          title: "New Project",
-          url: "/project",
-          icon: <CirclePlus />,
-          showSignedIn: true,
-          showSignedOut: true,
-        },
+        // {
+        //   title: "Project",
+        //   url: "/project",
+        //   icon: <Box />,
+        //   showSignedIn: true,
+        //   showSignedOut: true,
+        // },
         {
           title: "My Projects",
           url: "/my-projects",
-          icon: <Paintbrush />,
+          icon: <Box />,
           showSignedIn: true,
           showSignedOut: false,
         },
@@ -109,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {item.items.map((item) => (
-                  (isSignedIn && item.showSignedIn) || (!isSignedIn && item.showSignedOut) ? (
+                  ((isSignedIn && item.showSignedIn) || (!isSignedIn && item.showSignedOut)) && (
                     <div key={item.title}>
                       {item.title === "Pricing" ? (
                         <li><SubscriptionButtonDialog /></li>
@@ -121,8 +121,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuItem>
                       )}
                     </div>
-                  ) : null
-                ))}
+                  )))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
