@@ -1,7 +1,7 @@
 import { useSidebar } from "@/components/ui/sidebar";
 import { useDebouncedState } from "@mantine/hooks";
 import { useTheme } from "next-themes";
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export const useToggleTheme = () => {
   const { setTheme, resolvedTheme } = useTheme();
@@ -46,5 +46,11 @@ export function useDynamicDebouncedState<T>(initialValue: T, delay: number = 500
     setValue(debouncedValue);
   }, [debouncedValue]);
 
-  return [value, setValue, setDebounced] as const;
+  useEffect(() => {
+    if (value !== debouncedValue) {
+      setDebounced(value);
+    }
+  }, [value]);
+
+  return [value, setValue, debouncedValue, setDebounced] as const;
 }

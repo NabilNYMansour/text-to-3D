@@ -1,4 +1,3 @@
-//=========={ Constants and Types }==========//
 export const environmentPresets = ["Sunset", "Apartment", "City", "Dawn", "Forest", "Lobby", "Night", "Park", "Studio", "Warehouse"] as const;
 export type EnvironmentPresetType = typeof environmentPresets[number];
 
@@ -62,5 +61,6 @@ export const defaultControls = {
     scene: { opened: false },
   }
 }
-
 export type ControlsType = typeof defaultControls;
+
+export type SearchParams = { [key: string]: string | string[] | undefined };

@@ -1,18 +1,22 @@
 import MainApp from "@/components/layout/main-app";
 import { currentUser } from "@clerk/nextjs/server";
-import { redirect, usePathname } from "next/navigation";
+import { redirect } from "next/navigation";
 import * as db from "@/db/crud";
-import { defaultControls } from "@/lib/constants";
+import { defaultControls } from "@/lib/constants-and-types";
+import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 
 const Page = async () => {
+  noStore();
+  
   const user = await currentUser();
   if (!user) return <MainApp />;
 
   const slug = crypto.randomUUID().replace(/-/g, '');
+  const projectsCount = (await db.getUserProjectsCount(user.id, ""))[0].count;
 
   await db.createProject({
     clerkId: user.id,
-    name: "New Project",
+    name: "New Project " + (projectsCount + 1),
     slug: slug,
     payload: defaultControls,
   });

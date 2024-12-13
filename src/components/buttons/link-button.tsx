@@ -4,13 +4,14 @@ import { Button, ButtonProps } from '../ui/button';
 
 interface LinkButtonProps extends ButtonProps {
   href: string;
+  prefetch?: boolean;
 }
 
-const LinkButton: React.FC<LinkButtonProps> = ({ href, children, className, ...props }) => {
+const LinkButton: React.FC<LinkButtonProps> = ({ href, prefetch, ...props }) => {
   return (
-    <Link href={href} passHref>
-      <Button className={className} {...props}>
-        {children}
+    <Link href={href}>
+      <Button {...props}>
+        {props.children}
       </Button>
     </Link>
   );

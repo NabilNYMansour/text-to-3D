@@ -10,8 +10,8 @@ export const FullPageLoader = () => <Loader tailwind="text-primary-foreground da
 
 export const DotsLoader = () => {
   return <div className='flex justify-center items-center gap-1.5'>
-    <div className='w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]' />
-    <div className='w-1 h-1 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]' />
-    <div className='w-1 h-1 bg-primary rounded-full animate-bounce' />
+    <div className='w-1 h-1 bg-foreground rounded-full animate-bounce [animation-delay:-0.3s]' />
+    <div className='w-1 h-1 bg-foreground rounded-full animate-bounce [animation-delay:-0.15s]' />
+    <div className='w-1 h-1 bg-foreground rounded-full animate-bounce' />
   </div>
 }

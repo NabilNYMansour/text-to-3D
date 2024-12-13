@@ -7,9 +7,18 @@ import {
   GradientTexture, GradientType,
   OrbitControls, Text3D
 } from "@react-three/drei";
+import {
+  ControlsType, defaultControls,
+  environmentPresets, EnvironmentPresetType,
+  environmentBackgrounds, environmentBackgroundsOrthographic, EnvironmentBackgroundType,
+  materials,
+  MaterialType,
+  fonts,
+  FontType
+} from "@/lib/constants-and-types";
 import { Canvas, useThree } from "@react-three/fiber";
 import { cloneElement, Dispatch, SetStateAction, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Box, BrickWall, Camera, Download, Lightbulb, Pencil, Save, SendHorizontal, Settings, Theater, TriangleRight, X } from "lucide-react";
+import { Box, BrickWall, Camera, Check, Download, Lightbulb, SendHorizontal, Settings, Theater, TriangleRight, X } from "lucide-react";
 import PanelAccordion from "@/components/elements/panel-accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -24,22 +33,14 @@ import { Button } from "@/components/ui/button";
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Skeleton } from "../ui/skeleton";
-import {
-  ControlsType, defaultControls,
-  environmentPresets, EnvironmentPresetType,
-  environmentBackgrounds, environmentBackgroundsOrthographic, EnvironmentBackgroundType,
-  materials,
-  MaterialType,
-  fonts,
-  FontType
-} from "@/lib/constants";
 import { useClerk } from "@clerk/nextjs";
 import { Input } from "../ui/input";
 import LinkButton from "../buttons/link-button";
 import dynamic from "next/dynamic";
 import Loader, { FullPageLoader } from "../elements/loader";
+import { useDebouncedState } from "@mantine/hooks";
 
-//=========={ Save GLTF }==========//
+//=========={ Export }==========//
 function saveArrayBuffer(buffer: ArrayBuffer, fileName: string) {
   save(new Blob([buffer], { type: 'application/octet-stream' }), fileName)
 }
@@ -75,6 +76,38 @@ function exportGLTF(scene: THREE.Scene) {
   );
 
 }
+const getGLTF = (textMeshRef: React.MutableRefObject<THREE.Mesh | null>, controls: ControlsType) => {
+  if (!textMeshRef.current) return;
+  const exportScene = new THREE.Scene();
+  const textMesh = textMeshRef.current.clone();
+  if (controls.material === "Normal Material") {
+    textMesh.material = new THREE.MeshStandardMaterial();
+  }
+  exportScene.add(textMesh);
+  exportGLTF(exportScene);
+}
+const getScreenShot = (gl: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera | THREE.OrthographicCamera, width: number, height: number) => {
+  const originalZoom = camera.zoom;
+  const originalSize = new THREE.Vector2();
+  gl.getSize(originalSize);
+
+  gl.setSize(width, height);
+  setCameraAspect(camera, width, height);
+  if (camera instanceof THREE.OrthographicCamera) { // onlt for orthographic camera
+    camera.zoom *= Math.min(width / originalSize.width, height / originalSize.height);
+  }
+  camera.updateProjectionMatrix();
+
+  gl.render(scene, camera);
+  const screenshot = gl.domElement.toDataURL("image/png");
+
+  gl.setSize(originalSize.width, originalSize.height);
+  setCameraAspect(camera, originalSize.width, originalSize.height);
+  camera.zoom = originalZoom;
+  camera.updateProjectionMatrix();
+
+  return screenshot;
+}
 
 //=========={ Utils }==========//
 const setCameraAspect = (camera: THREE.PerspectiveCamera | THREE.OrthographicCamera, width: number, height: number) => {
@@ -89,13 +122,29 @@ const setCameraAspect = (camera: THREE.PerspectiveCamera | THREE.OrthographicCam
   }
   camera.updateProjectionMatrix();
 }
+const getMaterialJSX = (controls: ControlsType) => {
+  switch (controls.material) {
+    case "Normal Material":
+      return <meshNormalMaterial />;
+    case "Standard Material":
+      return <meshStandardMaterial color={controls.color} metalness={controls.metalness.value} roughness={controls.roughness.value} />;
+    case "Gradient Material":
+      return <GradientMaterial color={controls.color} secondColor={controls.secondColor} colorOnly={controls.colorOnly} metalness={controls.metalness.value} roughness={controls.roughness.value} />;
+    case "Wireframe Material":
+      return <meshBasicMaterial wireframe color={controls.color} />;
+    case "Basic Material":
+      return <meshBasicMaterial color={controls.color} />;
+    default:
+      return <meshNormalMaterial />;
+  }
+}
 
 //=========={ Components }==========//
 const InputComponent = ({ label, children, className }:
   { label: React.ReactNode, children?: React.ReactNode, className?: string }
 ) => {
   return (
-    <div className={cn("w-full grid grid-cols-2 items-center", className)}>
+    <div className={cn("w-full grid grid-cols-2 items-center min-h-8", className)}>
       <label className="truncate whitespace-nowrap">
         {label}
       </label>
@@ -112,36 +161,17 @@ const ScreenshotComponent = ({ click, setClick, width, height }: {
   height: number
 }) => {
   const { gl, scene, camera } = useThree();
-  const getScreenShot = () => {
-    const originalZoom = camera.zoom;
-    const originalSize = new THREE.Vector2();
-    gl.getSize(originalSize);
-
-    gl.setSize(width, height);
-    setCameraAspect(camera, width, height);
-    if (camera instanceof THREE.OrthographicCamera) { // onlt for orthographic camera
-      camera.zoom *= Math.min(width / originalSize.width, height / originalSize.height);
-    }
-    camera.updateProjectionMatrix();
-
-    gl.render(scene, camera);
-    const screenshot = gl.domElement.toDataURL("image/png");
-
-    const link = document.createElement("a");
-    link.href = screenshot;
-    link.download = "screenshot.png";
-    link.click();
-    link.remove();
-
-    gl.setSize(originalSize.width, originalSize.height);
-    setCameraAspect(camera, originalSize.width, originalSize.height);
-    camera.zoom = originalZoom;
-    camera.updateProjectionMatrix();
-  }
 
   useEffect(() => {
     if (click) {
-      getScreenShot();
+      const screenshot = getScreenShot(gl, scene, camera, width, height);
+
+      const link = document.createElement("a");
+      link.href = screenshot;
+      link.download = "screenshot.png";
+      link.click();
+      link.remove();
+
       setClick(false);
     }
   }, [click]);
@@ -150,8 +180,8 @@ const ScreenshotComponent = ({ click, setClick, width, height }: {
 }
 const SceneObjects = ({ controls, textMeshRef, materialComponent }:
   {
-    controls: any,
-    textMeshRef: React.MutableRefObject<THREE.Mesh | null>,
+    controls: ControlsType,
+    textMeshRef?: React.MutableRefObject<THREE.Mesh | null>,
     materialComponent: React.ReactElement
   }
 ) => {
@@ -202,11 +232,10 @@ const SceneObjects = ({ controls, textMeshRef, materialComponent }:
     </Backdrop>}
   </>
 }
-const SceneBackground = ({ controls }: { controls: any }) => {
+const SceneBackground = ({ controls }: { controls: ControlsType }) => {
   return <>
     {controls.background === "Gradient" &&
       <GradientTexture
-        key={controls.background}
         attach="background"
         stops={[0, 1]}
         center={new THREE.Vector2(0.5, 0.5)}
@@ -216,10 +245,94 @@ const SceneBackground = ({ controls }: { controls: any }) => {
       />}
     {controls.background === "Color" && <color
       attach="background"
-      key={controls.background}
       args={[controls.backgroundColor]}
     />}
   </>
+}
+export const TextTo3D = ({
+  controls,
+  clickScreenShot,
+  setClickScreenShot,
+  screenshotResolution,
+  geometryRerenderKey,
+  textMeshRef,
+  material,
+  frameloop = "always",
+  orbitControlsEnabled = true,
+  zoom = 1,
+  className,
+}: {
+  controls: ControlsType,
+  clickScreenShot?: boolean,
+  setClickScreenShot?: (value: boolean) => void,
+  screenshotResolution?: { width: number, height: number },
+  geometryRerenderKey: string,
+  textMeshRef?: React.MutableRefObject<THREE.Mesh | null>,
+  material?: JSX.Element,
+  frameloop?: "demand" | "always" | "never",
+  orbitControlsEnabled?: boolean,
+  zoom?: number,
+  className?: string
+}) => {
+
+  const materialComponent = useMemo(() => {
+    let materialJSX: JSX.Element;
+    if (!material) {
+      materialJSX = getMaterialJSX(controls);
+    }
+    else {
+      materialJSX = material;
+    }
+
+    return cloneElement(materialJSX, {
+      color: controls.color,
+      secondColor: controls.secondColor,
+      roughness: controls.roughness.value,
+      metalness: controls.metalness.value,
+      colorOnly: controls.colorOnly,
+    });
+  }, [material, controls.color, controls.secondColor, controls.roughness.value, controls.metalness.value, controls.colorOnly]);
+
+  return <Canvas shadows
+    className={cn("rounded-md bg-background transition-opacity duration-300", className)}
+    gl={{ preserveDrawingBuffer: true }}
+    camera={controls.perspective ? { zoom: 1 } : { zoom: zoom * 100, near: -1000, far: 1000 }}
+    orthographic={!controls.perspective}
+    key={controls.perspective ? "perspective" : "orthographic"}
+    style={{ opacity: clickScreenShot ? 0 : 1 }}
+    frameloop={frameloop}
+  >
+    {/* //=========={ Screenshot }==========// */}
+    {clickScreenShot && screenshotResolution && setClickScreenShot &&
+      <ScreenshotComponent
+        click={clickScreenShot} setClick={setClickScreenShot}
+        width={screenshotResolution.width} height={screenshotResolution.height}
+      />}
+
+    {/* //=========={ Background }==========// */}
+    <SceneBackground controls={controls} key={controls.background} />
+
+    {/* //=========={ Scene Objects }==========// */}
+    <SceneObjects key={geometryRerenderKey} controls={controls} textMeshRef={textMeshRef} materialComponent={materialComponent} />
+
+    {/* //=========={ Environment and Light }==========// */}
+    <Environment
+      key={controls.preset}
+      preset={controls.preset.toLowerCase() as EnvironmentProps["preset"]}
+      extensions={(loader: any) => loader.setDataType(THREE.FloatType)}
+      background={controls.background === "Environment" && controls.perspective}
+    />
+    {controls.lightEnabled && <directionalLight castShadow
+      intensity={controls.light.intensity}
+      color={controls.light.color}
+      shadow-mapSize-width={2048}
+      shadow-mapSize-height={2048}
+      position={controls.light.position as [number, number, number]}
+    />}
+
+    {/* //=========={ Orbit Controls }==========// */}
+    {orbitControlsEnabled && <OrbitControls makeDefault />}
+  </Canvas>
 }
 
 //=========={ Panels }==========//
@@ -478,7 +591,7 @@ const ScenePanel = ({ controls, setControls, setScenePanelOpened }: {
   setScenePanelOpened: Dispatch<SetStateAction<boolean>>,
 }) => {
   return <PanelAccordion opened={controls.panels.scene.opened}
-  onPanelChange={(opened) => setScenePanelOpened(opened)}
+    onPanelChange={(opened) => setScenePanelOpened(opened)}
     title={<div className="cu-flex-center gap-2">
       <Theater className="w-4 h-4" />
       <label className="text-base hover:cursor-pointer">
@@ -570,7 +683,7 @@ type MainAppProps = {
   }>
 };
 const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls }: MainAppProps) => {
-  //=========={ close Sidebar }==========//
+  //=========={ Close Sidebar }==========//
   closeSiderbar();
 
   //=========={ State and Refs }==========//
@@ -578,50 +691,14 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
   const [clickScreenShot, setClickScreenShot] = useState(false);
   const [screenshotResolution, setScreenshotResolution] = useState({ width: 1920, height: 1080 });
 
+  //=========={ Controls }==========//
+  const [controls, setControls, debouncedControls, setControlsDebounced] = useDynamicDebouncedState<ControlsType>(initControls, 100);
+
   //=========={ Clerk }==========//
   const { user } = useClerk();
 
-  //=========={ Controls }==========//
-  const [controls, setControls, setControlsDebounced] = useDynamicDebouncedState<ControlsType>(initControls, 100);
-
-  //=========={ Export GLTF }==========//
-  const handleExport = () => {
-    if (!textMeshRef.current) return;
-    const exportScene = new THREE.Scene();
-    const textMesh = textMeshRef.current.clone();
-    if (controls.material === "Normal Material") {
-      textMesh.material = new THREE.MeshStandardMaterial();
-    }
-    exportScene.add(textMesh);
-    exportGLTF(exportScene);
-  }
-
   //=========={ Material }==========//
-  const material = useMemo(() => {
-    switch (controls.material) {
-      case "Normal Material":
-        return <meshNormalMaterial />;
-      case "Standard Material":
-        return <meshStandardMaterial color={controls.color} metalness={controls.metalness.value} roughness={controls.roughness.value} />;
-      case "Gradient Material":
-        return <GradientMaterial color={controls.color} secondColor={controls.secondColor} colorOnly={controls.colorOnly} metalness={controls.metalness.value} roughness={controls.roughness.value} />;
-      case "Wireframe Material":
-        return <meshBasicMaterial wireframe color={controls.color} />;
-      case "Basic Material":
-        return <meshBasicMaterial color={controls.color} />;
-      default:
-        return <meshNormalMaterial />;
-    }
-  }, [controls.material]);
-  const materialComponent = useMemo(() => {
-    return cloneElement(material, {
-      color: controls.color,
-      secondColor: controls.secondColor,
-      roughness: controls.roughness.value,
-      metalness: controls.metalness.value,
-      colorOnly: controls.colorOnly,
-    });
-  }, [material, controls.color, controls.secondColor, controls.roughness.value, controls.metalness.value, controls.colorOnly]);
+  const material = useMemo(() => getMaterialJSX(controls), [controls.material]);
 
   //=========={ Panels Bug fix }==========//
   const [materialPanelOpened, setMaterialPanelOpened] = useState(controls.panels.material.opened);
@@ -640,7 +717,7 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
     controls.lineHeight.value, controls.letterSpacing.value, controls.material
   ]);
 
-  //=========={ Client Side Actions }==========//
+  //=========={ Client Side Actions Component }==========//
   const sceneActionsComponent = useMemo(() => {
     return <div className="absolute z-[1] flex items-center justify-between left-0 top-0 m-6 gap-2">
       <Popover>
@@ -682,42 +759,61 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
           </Button>
 
           <h1 className="flex items-center gap-1 mt-2"><Box className="w-4 h-4" /> 3D Model</h1>
-          <Button onClick={handleExport}>
+          <Button onClick={() => getGLTF(textMeshRef, controls)}>
             Download GLTF
           </Button>
 
         </PopoverContent>
       </Popover>
     </div>
-  }, [handleExport]);
+  }, []);
 
-  //=========={ Server Side Actions }==========//
+  //=========={ Server Side Actions States }==========//
   const [newName, setNewName] = useState(name);
   const [editingName, setEditingName] = useState(false);
   const [backendLoading, setBackendLoading] = useState(false);
-  const [cannotSave, setCannotSave] = useState(false);
+  const [checkSaveControls, setCheckSaveControls] = useDebouncedState<ControlsType>(controls, 1000); // autosave every 1 second
+
+  //=========={ Server Side Actions Handles }==========//
+  const handleNameSave = async () => {
+    setEditingName(false);
+    if (newName && updateName && user && slug) {
+      setBackendLoading(true);
+      const res = await updateName(user.id, slug, newName);
+      if (res && res.success) {
+        setBackendLoading(false);
+      } else if (res && res.error) {
+        setBackendLoading(false);
+        alert(res.error);
+      } else {
+        setBackendLoading(false);
+        alert("An unknown error occurred. Please try again later.");
+      }
+    }
+  };
+  const handleControlsSave = async () => {
+    if (updateControls && user && slug) {
+      setBackendLoading(true);
+      const res = await updateControls(user.id, slug, debouncedControls);
+      if (res && res.success) {
+        setBackendLoading(false);
+      } else if (res && res.error) {
+        setBackendLoading(false);
+        alert(res.error);
+      } else {
+        setBackendLoading(false);
+        alert("An unknown error occurred. Please try again later.");
+      }
+    }
+  }
 
   //=========={ Server Side Actions Effects }==========//
   useEffect(() => {
-    setCannotSave(JSON.stringify(controls) === JSON.stringify(initControls));
-  }, [controls]);
-
+    setCheckSaveControls(debouncedControls);
+  }, [debouncedControls]);
   useEffect(() => {
-    const handleAutosave = async () => {
-      if (updateControls && !cannotSave && user && slug) {
-        setBackendLoading(true);
-        const res = await updateControls(user.id, slug, controls);
-        if (res.success) {
-          setBackendLoading(false);
-          setCannotSave(true);
-        }
-      }
-    };
-
-    const autosaveInterval = setInterval(handleAutosave, 5000); // Autosave every 5 seconds
-
-    return () => clearInterval(autosaveInterval);
-  }, [controls, cannotSave, updateControls, user, slug]);
+    handleControlsSave();
+  }, [checkSaveControls]);
 
   //=========={ Server Side Actions Component }==========//
   const sceneNameComponent = useMemo(() => {
@@ -729,26 +825,6 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
           </LinkButton>
         </div>
       );
-    }
-
-    const handleNameSave = async () => {
-      setEditingName(false);
-      if (newName && updateName) {
-        setBackendLoading(true);
-        const res = await updateName(user.id, slug, newName);
-        if (res.success) setBackendLoading(false);
-      }
-    };
-
-    const handleControlsSave = async () => {
-      if (updateControls) {
-        setBackendLoading(true);
-        const res = await updateControls(user.id, slug, controls);
-        if (res.success) {
-          setBackendLoading(false);
-          setCannotSave(true);
-        }
-      }
     }
 
     if (editingName) {
@@ -775,24 +851,21 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
       </div>
     } else {
       return <div className="w-full flex justify-between items-center select-text gap-2">
-        <h1 className="text-lg font-bold truncate whitespace-nowrap">
+        <h1 className="text-lg font-bold truncate whitespace-nowrap cursor-pointer w-full hover:bg-muted rounded-md p-1"
+          onClick={() => setEditingName(true)}
+        >
           {newName}
         </h1>
-        <div className="flex gap-2">
-          <Button variant="outline" className="cu-shadow" size="icon" onClick={() => setEditingName(true)} disabled={backendLoading}>
-            <Pencil className="w-4 h-4" />
-          </Button>
-          <Button variant="outline" className="cu-shadow" size="icon" onClick={handleControlsSave} disabled={cannotSave || backendLoading}>
-            {backendLoading ? <Loader size={16} /> : <Save className="w-4 h-4" />}
-          </Button>
+        <div className="p-2">
+          {backendLoading ? <Loader size={16} /> : <Check className="w-4 h-4 text-green-500 opacity-50" />}
         </div>
       </div>
     }
-  }, [name, slug, user, newName, editingName, backendLoading, updateName, updateControls, controls, cannotSave]);
+  }, [name, slug, user, editingName, newName, backendLoading]);
 
   //=========={ Render }==========//
   return (
-    <div className="flex-1 select-none max-h-[calc(100vh-52px)] w-full flex bg-black bg-opacity-10 dark:bg-white dark:bg-opacity-5 flex-col md:flex-row">
+    <div className="flex-1 select-none max-h-[calc(100vh-52px)] w-full bg-black bg-opacity-10 dark:bg-white dark:bg-opacity-5 flex flex-col md:flex-row">
       <div className="md:w-[20%] overflow-auto bg-background p-2 m-4 mb-0 md:mb-4 md:mr-0 rounded-md flex flex-col gap-2 items-center transition-transform">
         {/* //=========={ Scene name }==========// */}
         {sceneNameComponent}
@@ -811,45 +884,10 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
         {/* //=========={ Scene }==========// */}
         <Suspense fallback={<Skeleton className="w-full h-full bg-muted" />}>
           {sceneActionsComponent}
-          <Canvas shadows
-            className="rounded-md bg-background transition-opacity duration-300"
-            gl={{ preserveDrawingBuffer: true }}
-            frameloop="always"
-            camera={controls.perspective ? { zoom: 1 } : { zoom: 100, near: -1000, far: 1000 }}
-            orthographic={!controls.perspective}
-            key={controls.perspective ? "perspective" : "orthographic"}
-            style={{ opacity: clickScreenShot ? 0 : 1 }}
-          >
-            {/* //=========={ Screenshot }==========// */}
-            <ScreenshotComponent
-              click={clickScreenShot} setClick={setClickScreenShot}
-              width={screenshotResolution.width} height={screenshotResolution.height}
-            />
-
-            {/* //=========={ Background }==========// */}
-            <SceneBackground controls={controls} />
-
-            {/* //=========={ Scene Objects }==========// */}
-            <SceneObjects key={geometryRerenderKey} controls={controls} textMeshRef={textMeshRef} materialComponent={materialComponent} />
-
-            {/* //=========={ Environment and Light }==========// */}
-            <Environment
-              key={controls.preset}
-              preset={controls.preset.toLowerCase() as EnvironmentProps["preset"]}
-              extensions={(loader: any) => loader.setDataType(THREE.FloatType)}
-              background={controls.background === "Environment" && controls.perspective}
-            />
-            {controls.lightEnabled && <directionalLight castShadow
-              intensity={controls.light.intensity}
-              color={controls.light.color}
-              shadow-mapSize-width={2048}
-              shadow-mapSize-height={2048}
-              position={controls.light.position as [number, number, number]}
-            />}
-
-            {/* //=========={ Orbit Controls }==========// */}
-            <OrbitControls makeDefault />
-          </Canvas>
+          <TextTo3D controls={controls} clickScreenShot={clickScreenShot} setClickScreenShot={setClickScreenShot}
+            screenshotResolution={screenshotResolution} geometryRerenderKey={geometryRerenderKey}
+            textMeshRef={textMeshRef} material={material}
+          />
         </Suspense>
       </div>
     </div>

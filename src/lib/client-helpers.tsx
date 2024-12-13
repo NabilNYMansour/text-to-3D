@@ -1,4 +1,5 @@
 "use client";
+
 import { CircleDollarSign, CircleUserRound, Gem, Palette } from "lucide-react";
 
 export function capitalizeFirstLetter(s: string | undefined) {

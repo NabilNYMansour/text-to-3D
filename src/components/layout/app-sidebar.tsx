@@ -16,7 +16,7 @@ import { Box, CirclePlus, Home, Images, LogIn, LogOut, Mail, Paintbrush, ScrollT
 import { useUser } from "@clerk/nextjs";
 import { FullPageLoader } from "../elements/loader";
 import SubscriptionButtonDialog from "../buttons/subscription-button-dialog";
-import ThreeDText from "../ui/3d-text";
+import Image from "next/image";
 
 const data = {
   navMain: [
@@ -101,7 +101,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader className="flex flex-row items-center py-4 border-b border-transparent">
-        <Link href="/"><ThreeDText text="Text to 3D" className="text-4xl hover:bg-muted p-4 rounded-md" /></Link>
+        <Link href="/" className="w-full hover:bg-muted rounded-md p-4">
+          <Image src="/long-text-logo.png" alt="logo"
+            priority
+            width={0}
+            height={0}
+            sizes="100vw"
+            style={{ width: '100%', height: '100%' }}
+          />
+        </Link>
       </SidebarHeader>
       <SidebarContent className="flex flex-col justify-between">
         {isLoaded ? data.navMain.map((item, index) => (
