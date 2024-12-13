@@ -1,13 +1,11 @@
 "use server";
 
 import * as z from 'zod';
-import { ControlsType } from '@/lib/constants-and-types';
+import { ActionResponseType, ControlsType } from '@/lib/constants-and-types';
 import { getProjectPayloadBySlug } from '@/db/crud';
 import * as db from '@/db/crud';
 
 //=========={ Project Actions }==========//
-export type ActionResponseType = { error: string; success?: undefined; } | { success: boolean; error?: undefined; };
-
 const zodNameActionSchema = z.object({
   clerkId: z.string().min(1),
   name: z.string().min(1),

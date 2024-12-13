@@ -6,7 +6,7 @@ import { TextTo3D } from './main-app';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '../ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CirclePlus, Ellipsis, ExternalLink, Pencil, Plus, SendHorizontal, Trash2 } from 'lucide-react';
-import { ControlsType } from '@/lib/constants-and-types';
+import { ActionResponseType, ControlsType } from '@/lib/constants-and-types';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
   Dialog,
@@ -19,8 +19,102 @@ import { cn } from '@/lib/utils';
 import { useUser } from '@clerk/nextjs';
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
-import { ActionResponseType } from '@/lib/server-actions';
-import { DotsLoader } from '../elements/loader';
+import Loader, { DotsLoader } from '../elements/loader';
+
+const ProjectPopover = ({ project, deleteProject, updateName, setIsHovered }: {
+  project: { slug: string, name: string },
+  deleteProject: (clerkId: string, slug: string) => Promise<ActionResponseType>,
+  updateName: (clerkId: string, slug: string, name: string) => Promise<ActionResponseType>
+  setIsHovered: (hovered: boolean) => void,
+}) => {
+  const router = useRouter();
+  const [newName, setNewName] = useState(project.name);
+  const { user } = useUser();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [nameInputDisabled, setNameInputDisabled] = useState(false);
+
+  const handleNameSave = async () => {
+    if (user && newName && updateName) {
+      setNameInputDisabled(true);
+      const res = await updateName(user.id, project.slug, newName);
+      if (res.success) {
+        setDialogOpen(false);
+        router.refresh();
+      } else {
+        alert(res.error);
+      }
+      setNameInputDisabled(false);
+    }
+  };
+
+  return <Popover>
+    <PopoverTrigger asChild>
+      <Button size="icon" variant="ghost"
+        onMouseEnter={() => setIsHovered(false)}
+        onMouseLeave={() => setIsHovered(true)}
+        onTouchStart={() => setIsHovered(false)}
+        onTouchEnd={() => setIsHovered(true)}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Ellipsis className="w-4 h-4" />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="flex flex-col gap-2 w-fit"
+      onMouseEnter={() => setIsHovered(false)}
+      onMouseLeave={() => setIsHovered(true)}
+      onTouchStart={() => setIsHovered(false)}
+      onTouchEnd={() => setIsHovered(true)}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Button variant="ghost" onClick={() => router.push(`/project/${project.slug}`)}>
+        <div className='flex items-center gap-2 w-full'>
+          <ExternalLink className="w-4 h-4" />Open
+        </div>
+      </Button>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogTrigger asChild>
+          <Button variant="ghost">
+            <div className='flex items-center gap-2 w-full'>
+              <Pencil className="w-4 h-4" />Rename
+            </div>
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogTitle>Rename Project</DialogTitle>
+          <DialogDescription>
+            Enter a new name for your project
+          </DialogDescription>
+          <div className='flex flex-col gap-2'>
+            <Input
+              type="text"
+              defaultValue={newName}
+              disabled={nameInputDisabled}
+              onChange={(e) => setNewName(e.target.value.trim())}
+              onKeyDown={(e) => e.key === "Enter" && handleNameSave()}
+            />
+            <div className='flex justify-end'>
+              <Button onClick={handleNameSave} disabled={nameInputDisabled}>
+                Send {nameInputDisabled ? <Loader /> : <SendHorizontal className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Button variant="destructive"
+        onClick={() => {
+          user && deleteProject(user.id, project.slug);
+          router.refresh();
+        }}
+      >
+        <div className='flex items-center gap-2 w-full'>
+          <Trash2 className="w-4 h-4" />Delete
+        </div>
+      </Button>
+    </PopoverContent>
+  </Popover>
+}
 
 const ProjectCard = ({ project, deleteProject, updateName }: {
   project: { slug: string, name: string, payload: ControlsType },
@@ -29,91 +123,6 @@ const ProjectCard = ({ project, deleteProject, updateName }: {
 }) => {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
-  const [newName, setNewName] = useState(project.name);
-  const { user } = useUser();
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const handleNameSave = async () => {
-    if (user && newName && updateName) {
-      const res = await updateName(user.id, project.slug, newName);
-      if (res.success) {
-        router.refresh();
-        setDialogOpen(false);
-      } else {
-        alert(res.error);
-      }
-    }
-  };
-
-  const popOverComponent = useMemo(() => {
-    return <Popover>
-      <PopoverTrigger asChild>
-        <Button size="icon" variant="ghost"
-          onMouseEnter={() => setIsHovered(false)}
-          onMouseLeave={() => setIsHovered(true)}
-          onTouchStart={() => setIsHovered(false)}
-          onTouchEnd={() => setIsHovered(true)}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Ellipsis className="w-4 h-4" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="flex flex-col gap-2 w-fit"
-        onMouseEnter={() => setIsHovered(false)}
-        onMouseLeave={() => setIsHovered(true)}
-        onTouchStart={() => setIsHovered(false)}
-        onTouchEnd={() => setIsHovered(true)}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Button variant="ghost" onClick={() => router.push(`/project/${project.slug}`)}>
-          <div className='flex items-center gap-2 w-full'>
-            <ExternalLink className="w-4 h-4" />Open
-          </div>
-        </Button>
-
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="ghost">
-              <div className='flex items-center gap-2 w-full'>
-                <Pencil className="w-4 h-4" />Rename
-              </div>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogTitle>Rename Project</DialogTitle>
-            <DialogDescription>
-              Enter a new name for your project
-            </DialogDescription>
-            <div className='flex flex-col gap-2'>
-              <Input
-                type="text"
-                defaultValue={newName}
-
-                onChange={(e) => setNewName(e.target.value.trim())}
-                onKeyDown={(e) => e.key === "Enter" && handleNameSave()}
-              />
-              <div className='flex justify-end'>
-                <Button onClick={handleNameSave}>
-                  Submit <SendHorizontal />
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Button variant="destructive"
-          onClick={() => {
-            user && deleteProject(user.id, project.slug);
-            router.refresh();
-          }}
-        >
-          <div className='flex items-center gap-2 w-full'>
-            <Trash2 className="w-4 h-4" />Delete
-          </div>
-        </Button>
-      </PopoverContent>
-    </Popover>
-  }, [project.slug, router, user, newName, updateName, deleteProject, dialogOpen, setDialogOpen, setNewName]);
 
   return (
     <div
@@ -129,7 +138,7 @@ const ProjectCard = ({ project, deleteProject, updateName }: {
         <h2 className="truncate whitespace-nowrap min-h-8 flex-1">
           {project.name}
         </h2>
-        {popOverComponent}
+        <ProjectPopover project={project} deleteProject={deleteProject} updateName={updateName} setIsHovered={setIsHovered} />
       </div>
       <div className="w-full h-full">
         <Suspense fallback={<Skeleton className="w-full h-full bg-muted" />}>
@@ -275,9 +284,9 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
         </div>
       </>}
 
-      <Separator className='my-5' />
+      <Separator className='mt-2' />
 
-      <div className='w-full flex items-center gap-1'>
+      <div className='w-full flex items-center gap-2'>
         <h1 className="text-xl font-bold">All Projects</h1>
         <Button onClick={() => router.push('/project')} size="icon" variant="ghost">
           <Plus />

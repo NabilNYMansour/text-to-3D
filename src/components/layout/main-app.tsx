@@ -14,7 +14,8 @@ import {
   materials,
   MaterialType,
   fonts,
-  FontType
+  FontType,
+  ActionResponseType
 } from "@/lib/constants-and-types";
 import { Canvas, useThree } from "@react-three/fiber";
 import { cloneElement, Dispatch, SetStateAction, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -662,25 +663,148 @@ const ScenePanel = ({ controls, setControls, setScenePanelOpened }: {
   </PanelAccordion>
 }
 
+//=========={ Client Side Actions Component }==========//
+const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClickScreenShot }: {
+  textMeshRef: React.MutableRefObject<THREE.Mesh | null>,
+  controls: ControlsType,
+  setScreenshotResolution: Dispatch<SetStateAction<{ width: number, height: number }>>,
+  setClickScreenShot: Dispatch<SetStateAction<boolean>>
+}) => {
+  return <div className="absolute z-[1] flex items-center justify-between left-0 top-0 m-6 gap-2">
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button title="Screenshot">
+          <Download className="w-4 h-4" /> Export
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="flex flex-col gap-2">
+        <h1 className="flex items-center gap-1"><Camera className="w-4 h-4" />Screenshot</h1>
+        <Button className="grid grid-cols-2 w-full" size="lg"
+          onClick={() => {
+            setScreenshotResolution({ width: 1920, height: 1080 });
+            setClickScreenShot(true);
+          }}
+        >
+          <div className="flex">PNG HD</div>
+          <div>1920 x 1080</div>
+        </Button>
+
+        <Button className="grid grid-cols-2 w-full" size="lg"
+          onClick={() => {
+            setScreenshotResolution({ width: 3840, height: 2160 });
+            setClickScreenShot(true);
+          }}
+        >
+          <div className="flex">PNG 4K</div>
+          <div>3840 x 2160</div>
+        </Button>
+
+        <Button className="grid grid-cols-2 w-full" size="lg"
+          onClick={() => {
+            setScreenshotResolution({ width: 7680, height: 4320 });
+            setClickScreenShot(true);
+          }}
+        >
+          <div className="flex">PNG 8K</div>
+          <div>7680 x 4320</div>
+        </Button>
+
+        <h1 className="flex items-center gap-1 mt-2"><Box className="w-4 h-4" /> 3D Model</h1>
+        <Button onClick={() => getGLTF(textMeshRef, controls)}>
+          Download GLTF
+        </Button>
+
+      </PopoverContent>
+    </Popover>
+  </div>
+}
+//=========={ Server Side Actions Component }==========//
+const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, updateName }: {
+  name?: string,
+  slug?: string,
+  backendLoading: boolean,
+  setBackendLoading: Dispatch<SetStateAction<boolean>>,
+  updateName?: (clerkId: string, slug: string, name: string) => Promise<ActionResponseType>,
+}) => {
+  const [newName, setNewName] = useState(name);
+  const [editingName, setEditingName] = useState(false);
+  const { user } = useClerk();
+
+  const handleNameSave = async () => {
+    setEditingName(false);
+    if (newName && updateName && user && slug) {
+      setBackendLoading(true);
+      const res = await updateName(user.id, slug, newName);
+      if (res && res.success) {
+        setBackendLoading(false);
+      } else if (res && res.error) {
+        setBackendLoading(false);
+        alert(res.error);
+      } else {
+        setBackendLoading(false);
+        alert("An unknown error occurred. Please try again later.");
+      }
+    }
+  };
+  
+  if (!name || !slug || !user) {
+    return (
+      <div className="flex w-full">
+        <LinkButton href="/sign-in" variant="outline" className="cu-shadow">
+          Sign in
+        </LinkButton>
+      </div>
+    );
+  }
+
+  if (editingName) {
+    return (
+      <div className="w-full flex justify-between items-center select-text gap-2">
+        <div>
+          <Button variant="destructive" size="icon" onClick={() => setEditingName(false)}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+        <Input
+          type="text"
+          defaultValue={newName}
+          onChange={(e) => setNewName(e.target.value.trim())}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleNameSave();
+            if (e.key === "Escape") setEditingName(false);
+          }}
+        />
+        <div>
+          <Button variant="outline" size="icon" className="cu-shadow" onClick={handleNameSave}>
+            <SendHorizontal className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  } else {
+    return (
+      <div className="w-full flex justify-between items-center select-text gap-2">
+        <h1
+          className="text-lg font-bold truncate whitespace-nowrap cursor-pointer w-full hover:bg-muted rounded-md p-1"
+          onClick={() => setEditingName(true)}
+        >
+          {newName}
+        </h1>
+        <div className="p-2">
+          {backendLoading ? <Loader size={16} /> : <Check className="w-4 h-4 text-green-500 opacity-50" />}
+        </div>
+      </div>
+    );
+  }
+};
+
 //=========={ Main App }==========//
 type MainAppProps = {
   name?: string,
-  updateName?: (clerkId: string, slug: string, name: string) => Promise<{
-    error: string;
-    success?: undefined;
-  } | {
-    success: boolean;
-    error?: undefined;
-  }>,
+  updateName?: (clerkId: string, slug: string, name: string) => Promise<ActionResponseType>,
   slug?: string,
   initControls?: ControlsType
-  updateControls?: (clerkId: string, slug: string, payload: ControlsType) => Promise<{
-    error: string;
-    success?: undefined;
-  } | {
-    success: boolean;
-    error?: undefined;
-  }>
+  updateControls?: (clerkId: string, slug: string, payload: ControlsType) => Promise<ActionResponseType>
 };
 const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls }: MainAppProps) => {
   //=========={ Close Sidebar }==========//
@@ -717,80 +841,11 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
     controls.lineHeight.value, controls.letterSpacing.value, controls.material
   ]);
 
-  //=========={ Client Side Actions Component }==========//
-  const sceneActionsComponent = useMemo(() => {
-    return <div className="absolute z-[1] flex items-center justify-between left-0 top-0 m-6 gap-2">
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button title="Screenshot">
-            <Download className="w-4 h-4" /> Export
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="flex flex-col gap-2">
-          <h1 className="flex items-center gap-1"><Camera className="w-4 h-4" />Screenshot</h1>
-          <Button className="grid grid-cols-2 w-full" size="lg"
-            onClick={() => {
-              setScreenshotResolution({ width: 1920, height: 1080 });
-              setClickScreenShot(true);
-            }}
-          >
-            <div className="flex">PNG HD</div>
-            <div>1920 x 1080</div>
-          </Button>
-
-          <Button className="grid grid-cols-2 w-full" size="lg"
-            onClick={() => {
-              setScreenshotResolution({ width: 3840, height: 2160 });
-              setClickScreenShot(true);
-            }}
-          >
-            <div className="flex">PNG 4K</div>
-            <div>3840 x 2160</div>
-          </Button>
-
-          <Button className="grid grid-cols-2 w-full" size="lg"
-            onClick={() => {
-              setScreenshotResolution({ width: 7680, height: 4320 });
-              setClickScreenShot(true);
-            }}
-          >
-            <div className="flex">PNG 8K</div>
-            <div>7680 x 4320</div>
-          </Button>
-
-          <h1 className="flex items-center gap-1 mt-2"><Box className="w-4 h-4" /> 3D Model</h1>
-          <Button onClick={() => getGLTF(textMeshRef, controls)}>
-            Download GLTF
-          </Button>
-
-        </PopoverContent>
-      </Popover>
-    </div>
-  }, []);
-
   //=========={ Server Side Actions States }==========//
-  const [newName, setNewName] = useState(name);
-  const [editingName, setEditingName] = useState(false);
   const [backendLoading, setBackendLoading] = useState(false);
   const [checkSaveControls, setCheckSaveControls] = useDebouncedState<ControlsType>(controls, 1000); // autosave every 1 second
 
   //=========={ Server Side Actions Handles }==========//
-  const handleNameSave = async () => {
-    setEditingName(false);
-    if (newName && updateName && user && slug) {
-      setBackendLoading(true);
-      const res = await updateName(user.id, slug, newName);
-      if (res && res.success) {
-        setBackendLoading(false);
-      } else if (res && res.error) {
-        setBackendLoading(false);
-        alert(res.error);
-      } else {
-        setBackendLoading(false);
-        alert("An unknown error occurred. Please try again later.");
-      }
-    }
-  };
   const handleControlsSave = async () => {
     if (updateControls && user && slug) {
       setBackendLoading(true);
@@ -815,60 +870,18 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
     handleControlsSave();
   }, [checkSaveControls]);
 
-  //=========={ Server Side Actions Component }==========//
-  const sceneNameComponent = useMemo(() => {
-    if (!name || !slug || !user) {
-      return (
-        <div className="flex w-full">
-          <LinkButton href="/sign-in" variant="outline" className="cu-shadow">
-            Sign in
-          </LinkButton>
-        </div>
-      );
-    }
-
-    if (editingName) {
-      return <div className="w-full flex justify-between items-center select-text gap-2">
-        <div>
-          <Button variant="destructive" size="icon" onClick={() => setEditingName(false)}>
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-        <Input
-          type="text"
-          defaultValue={newName}
-          onChange={(e) => setNewName(e.target.value.trim())}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleNameSave();
-            if (e.key === "Escape") setEditingName(false);
-          }}
-        />
-        <div>
-          <Button variant="outline" size="icon" className="cu-shadow" onClick={handleNameSave}>
-            <SendHorizontal className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    } else {
-      return <div className="w-full flex justify-between items-center select-text gap-2">
-        <h1 className="text-lg font-bold truncate whitespace-nowrap cursor-pointer w-full hover:bg-muted rounded-md p-1"
-          onClick={() => setEditingName(true)}
-        >
-          {newName}
-        </h1>
-        <div className="p-2">
-          {backendLoading ? <Loader size={16} /> : <Check className="w-4 h-4 text-green-500 opacity-50" />}
-        </div>
-      </div>
-    }
-  }, [name, slug, user, editingName, newName, backendLoading]);
-
   //=========={ Render }==========//
   return (
     <div className="flex-1 select-none max-h-[calc(100vh-52px)] w-full bg-black bg-opacity-10 dark:bg-white dark:bg-opacity-5 flex flex-col md:flex-row">
       <div className="md:w-[20%] overflow-auto bg-background p-2 m-4 mb-0 md:mb-4 md:mr-0 rounded-md flex flex-col gap-2 items-center transition-transform">
         {/* //=========={ Scene name }==========// */}
-        {sceneNameComponent}
+        <SceneNameComponent
+          name={name}
+          slug={slug}
+          backendLoading={backendLoading}
+          setBackendLoading={setBackendLoading}
+          updateName={updateName}
+        />
 
         {/* //=========={ Panels }==========// */}
         <GeneralPanel controls={controls} setControls={setControls} setControlsDebounced={setControlsDebounced} />
@@ -883,7 +896,7 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
       <div className="relative h-[100%] min-h-[50vh] md:w-[80%] p-4 cu-flex-center flex-col gap-2">
         {/* //=========={ Scene }==========// */}
         <Suspense fallback={<Skeleton className="w-full h-full bg-muted" />}>
-          {sceneActionsComponent}
+          <SceneActions textMeshRef={textMeshRef} controls={controls} setScreenshotResolution={setScreenshotResolution} setClickScreenShot={setClickScreenShot} />
           <TextTo3D controls={controls} clickScreenShot={clickScreenShot} setClickScreenShot={setClickScreenShot}
             screenshotResolution={screenshotResolution} geometryRerenderKey={geometryRerenderKey}
             textMeshRef={textMeshRef} material={material}

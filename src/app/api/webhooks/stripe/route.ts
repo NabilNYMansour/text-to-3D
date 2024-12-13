@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
     const session = event.data.object as any;
     const userId = session.metadata.userId;
     const subscriptionType = await priceIdToSubscriptionType(session.items.data[0].price.id);
+    // TODO: remove unnecessary awaits from backend like here
 
     //=========={ Logging }==========//
     console.log("=========={ Stripe Webhook }==========");

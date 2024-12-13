@@ -64,3 +64,5 @@ export const defaultControls = {
 export type ControlsType = typeof defaultControls;
 
 export type SearchParams = { [key: string]: string | string[] | undefined };
+
+export type ActionResponseType = { error: string; success?: undefined; } | { success: boolean; error?: undefined; };
