@@ -32,7 +32,7 @@ const zodControlsActionSchema = z.object({
   slug: z.string().min(1),
   // not checking payload, but you could add that later
 });
-export const UpdateControls = async (clerkId: string, slug: string, payload: ControlsType) : Promise<ActionResponseType> => {
+export const UpdateControls = async (clerkId: string, slug: string, payload: ControlsType): Promise<ActionResponseType> => {
   try {
     zodControlsActionSchema.parse({ clerkId, slug });
   } catch (error) {
@@ -52,7 +52,7 @@ const zodDeleteActionSchema = z.object({
   clerkId: z.string().min(1),
   slug: z.string().min(1),
 });
-export const DeleteProject = async (clerkId: string, slug: string) : Promise<ActionResponseType> => {
+export const DeleteProject = async (clerkId: string, slug: string): Promise<ActionResponseType> => {
 
   try {
     zodDeleteActionSchema.parse({ clerkId, slug });

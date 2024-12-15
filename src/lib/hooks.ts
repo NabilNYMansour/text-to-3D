@@ -1,7 +1,11 @@
+"use client";
+
 import { useSidebar } from "@/components/ui/sidebar";
+import { sendToMixpanelClient } from "@/mixpanel/client-side";
+import { useUser } from "@clerk/nextjs";
 import { useDebouncedState } from "@mantine/hooks";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useToggleTheme = () => {
   const { setTheme, resolvedTheme } = useTheme();
@@ -53,4 +57,16 @@ export function useDynamicDebouncedState<T>(initialValue: T, delay: number = 500
   }, [value]);
 
   return [value, setValue, debouncedValue, setDebounced] as const;
+}
+
+export function useMixpanel(eventName: string, data?: Record<string, any>) {
+  const hasRan = useRef<boolean>(false);
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (!hasRan.current) {
+      hasRan.current = true;
+      sendToMixpanelClient(user?.id, eventName, data);
+    }
+  },);
 }

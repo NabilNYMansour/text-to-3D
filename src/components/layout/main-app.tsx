@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ColorPicker } from "@/components/ui/color-picker";
-import { closeSiderbar, useDynamicDebouncedState } from "@/lib/hooks";
+import { closeSiderbar, useDynamicDebouncedState, useMixpanel } from "@/lib/hooks";
 import GradientMaterial from "@/components/elements/gradient-material";
 import MultiSelect from "@/components/elements/multi-select";
 import * as THREE from "three";
@@ -40,6 +40,7 @@ import LinkButton from "../buttons/link-button";
 import dynamic from "next/dynamic";
 import Loader, { FullPageLoader } from "../elements/loader";
 import { useDebouncedState } from "@mantine/hooks";
+import { sendToMixpanelClient } from "@/mixpanel/client-side";
 
 //=========={ Export }==========//
 function saveArrayBuffer(buffer: ArrayBuffer, fileName: string) {
@@ -155,13 +156,15 @@ const InputComponent = ({ label, children, className }:
     </div>
   );
 }
-const ScreenshotComponent = ({ click, setClick, width, height }: {
+const ScreenshotComponent = ({ click, setClick, width, height, slug }: {
   click: boolean,
   setClick: (value: boolean) => void,
   width: number,
-  height: number
+  height: number,
+  slug?: string
 }) => {
   const { gl, scene, camera } = useThree();
+  const { user } = useClerk();
 
   useEffect(() => {
     if (click) {
@@ -174,6 +177,8 @@ const ScreenshotComponent = ({ click, setClick, width, height }: {
       link.remove();
 
       setClick(false);
+
+      sendToMixpanelClient(user?.id, "screenshot", { slug, resolution: `${width}x${height}` });
     }
   }, [click]);
 
@@ -262,6 +267,7 @@ export const TextTo3D = ({
   orbitControlsEnabled = true,
   zoom = 1,
   className,
+  slug,
 }: {
   controls: ControlsType,
   clickScreenShot?: boolean,
@@ -274,6 +280,7 @@ export const TextTo3D = ({
   orbitControlsEnabled?: boolean,
   zoom?: number,
   className?: string
+  slug?: string
 }) => {
 
   const materialComponent = useMemo(() => {
@@ -308,6 +315,7 @@ export const TextTo3D = ({
       <ScreenshotComponent
         click={clickScreenShot} setClick={setClickScreenShot}
         width={screenshotResolution.width} height={screenshotResolution.height}
+        slug={slug}
       />}
 
     {/* //=========={ Background }==========// */}
@@ -664,12 +672,15 @@ const ScenePanel = ({ controls, setControls, setScenePanelOpened }: {
 }
 
 //=========={ Client Side Actions Component }==========//
-const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClickScreenShot }: {
+const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClickScreenShot, slug }: {
   textMeshRef: React.MutableRefObject<THREE.Mesh | null>,
   controls: ControlsType,
   setScreenshotResolution: Dispatch<SetStateAction<{ width: number, height: number }>>,
-  setClickScreenShot: Dispatch<SetStateAction<boolean>>
+  setClickScreenShot: Dispatch<SetStateAction<boolean>>,
+  slug?: string
 }) => {
+  const { user } = useClerk();
+
   return <div className="absolute z-[1] flex items-center justify-between left-0 top-0 m-6 gap-2">
     <Popover>
       <PopoverTrigger asChild>
@@ -710,7 +721,10 @@ const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClick
         </Button>
 
         <h1 className="flex items-center gap-1 mt-2"><Box className="w-4 h-4" /> 3D Model</h1>
-        <Button onClick={() => getGLTF(textMeshRef, controls)}>
+        <Button onClick={() => {
+          getGLTF(textMeshRef, controls);
+          sendToMixpanelClient(user?.id, "download-gltf", { slug });
+        }}>
           Download GLTF
         </Button>
 
@@ -746,7 +760,7 @@ const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, upd
       }
     }
   };
-  
+
   if (!name || !slug || !user) {
     return (
       <div className="flex w-full">
@@ -809,6 +823,9 @@ type MainAppProps = {
 const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls }: MainAppProps) => {
   //=========={ Close Sidebar }==========//
   closeSiderbar();
+
+  //=========={ Mixpanel }==========//
+  useMixpanel("main-app", { slug });
 
   //=========={ State and Refs }==========//
   const textMeshRef = useRef<THREE.Mesh | null>(null);
@@ -889,17 +906,22 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
         <BevelPanel controls={controls} setControls={setControls} setControlsDebounced={setControlsDebounced} />
         <LightPanel controls={controls} setControls={setControls} />
         <ScenePanel controls={controls} setControls={setControls} setScenePanelOpened={setScenePanelOpened} />
-
-        {/* //=========={ Reset and Export }==========// */}
       </div>
 
       <div className="relative h-[100%] min-h-[50vh] md:w-[80%] p-4 cu-flex-center flex-col gap-2">
         {/* //=========={ Scene }==========// */}
         <Suspense fallback={<Skeleton className="w-full h-full bg-muted" />}>
-          <SceneActions textMeshRef={textMeshRef} controls={controls} setScreenshotResolution={setScreenshotResolution} setClickScreenShot={setClickScreenShot} />
+          <SceneActions
+            textMeshRef={textMeshRef}
+            controls={controls}
+            setScreenshotResolution={setScreenshotResolution}
+            setClickScreenShot={setClickScreenShot}
+            slug={slug}
+          />
           <TextTo3D controls={controls} clickScreenShot={clickScreenShot} setClickScreenShot={setClickScreenShot}
             screenshotResolution={screenshotResolution} geometryRerenderKey={geometryRerenderKey}
             textMeshRef={textMeshRef} material={material}
+            slug={slug}
           />
         </Suspense>
       </div>

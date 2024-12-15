@@ -3,11 +3,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import * as db from "@/db/crud";
 import { defaultControls } from "@/lib/constants-and-types";
-import { unstable_noStore as noStore, revalidatePath } from "next/cache";
+import { unstable_noStore as noStore } from "next/cache";
 
 const Page = async () => {
   noStore();
-  
+
   const user = await currentUser();
   if (!user) return <MainApp />;
 

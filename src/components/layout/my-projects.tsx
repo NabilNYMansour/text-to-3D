@@ -20,6 +20,8 @@ import { useUser } from '@clerk/nextjs';
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import Loader, { DotsLoader } from '../elements/loader';
+import { useSidebar } from '../ui/sidebar';
+import { useMixpanel } from '@/lib/hooks';
 
 const ProjectPopover = ({ project, deleteProject, updateName, setIsHovered }: {
   project: { slug: string, name: string },
@@ -123,6 +125,12 @@ const ProjectCard = ({ project, deleteProject, updateName }: {
 }) => {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
+  const sidebar = useSidebar();
+
+  const handleClick = () => {
+    sidebar.setOpen(false);
+    router.push(`/project/${project.slug}`);
+  }
 
   return (
     <div
@@ -132,7 +140,7 @@ const ProjectCard = ({ project, deleteProject, updateName }: {
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => setIsHovered(true)}
       onTouchEnd={() => setIsHovered(false)}
-      onClick={() => router.push(`/project/${project.slug}`)}
+      onClick={handleClick}
     >
       <div className='flex w-full justify-between items-center'>
         <h2 className="truncate whitespace-nowrap min-h-8 flex-1">
@@ -238,6 +246,8 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
 }) => {
   const router = useRouter();
   const params = useSearchParams();
+
+  useMixpanel("my-projects", { projectsCount });
 
   useEffect(() => {
     const page = params.get('page') ?? "";

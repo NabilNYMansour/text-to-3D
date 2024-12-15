@@ -6,12 +6,15 @@ import { dark } from "@clerk/themes";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { FullPageLoader } from "@/components/elements/loader";
+import { useMixpanel } from "@/lib/hooks";
 
 function Page() {
   const { resolvedTheme } = useTheme();
 
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
+
+  useMixpanel("sign-up", { redirectUrl });
 
   return <div className="flex-1 cu-flex-center p-4">
     <SignUp

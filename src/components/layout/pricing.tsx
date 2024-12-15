@@ -1,7 +1,7 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SwitchText from "@/components/ui/switch-text";
 import { CircleCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import SubscribeButton from "../buttons/subscribe-button";
 import Link from "next/link";
 import Loader from "../elements/loader";
 import { getPricingIcon } from "@/lib/client-helpers";
+import { useMixpanel } from "@/lib/hooks";
 
 type PricingPlan = {
   name: string;
@@ -187,6 +188,8 @@ const Pricing = ({ handleClick }: { handleClick?: () => void }) => {
 
   const subscriptionType = user.user ? user.user.publicMetadata.subscriptionType as string : null;
   const userId = user.user ? user.user.id : null;
+
+  useMixpanel("pricing-page", { currentSubscriptionType: subscriptionType });
 
   return (
     <ScrollArea className="flex-1">

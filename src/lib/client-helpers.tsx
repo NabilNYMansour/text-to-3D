@@ -53,3 +53,11 @@ export const getPricingIcon = (subscriptionType: string) => {
       return <CircleDollarSign />;
   }
 }
+
+export function getOperatingSystem() {
+  if (navigator.userAgent.indexOf('Win') !== -1) { return 'Windows OS'; }
+  if (navigator.userAgent.indexOf('Mac') !== -1) { return 'MacOS'; }
+  if (navigator.userAgent.indexOf('X11') !== -1) { return 'UNIX OS'; }
+  if (navigator.userAgent.indexOf('Linux') !== -1) { return 'Linux OS'; }
+  return "Not known";
+}
