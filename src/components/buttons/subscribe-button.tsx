@@ -4,6 +4,7 @@ import { MouseEvent } from 'react';
 import { Button, ButtonProps } from '../ui/button';
 import { loadStripe } from "@stripe/stripe-js";
 import { useUser } from '@clerk/nextjs';
+import { captureException } from '@sentry/nextjs';
 
 const createSubscription = async (
   userId: string,
@@ -32,7 +33,8 @@ const createSubscription = async (
       });
     }
   } catch (error) {
-    console.log(error);
+    alert('Something went wrong');
+    captureException(error);
   }
 };
 

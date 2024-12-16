@@ -12,12 +12,12 @@ export const getPricingButtonTailwind = (subscriptionType: string) => {
     case "Free":
     case "free":
       return "cu-shadow";
-    case "Basic":
-    case "basic":
+    case "Pro":
+    case "pro":
       return "hover:bg-yellow-300";
-    case "Premium":
-    case "premium":
-      return "bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_10px_2px] shadow-orange-500";
+    // case "Lifetime":
+    // case "lifetime":
+    //   return "bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_10px_2px] shadow-orange-500";
     default:
       return "text-primary-foreground dark:text-primary";
   }
@@ -27,12 +27,12 @@ export const getPricingButtonVariant = (subscriptionType: string) => {
     case "Free":
     case "free":
       return "outline";
-    case "Basic":
-    case "basic":
+    case "Pro":
+    case "pro":
       return "default";
-    case "Premium":
-    case "premium":
-      return "default";
+    // case "Lifetime":
+    // case "lifetime":
+    //   return "default";
     default:
       return "secondary";
   }
@@ -43,12 +43,12 @@ export const getPricingIcon = (subscriptionType: string) => {
     case "Free":
     case "free":
       return <CircleUserRound />
-    case "Basic":
-    case "basic":
-      return <Palette />;
-    case "Premium":
-    case "premium":
+    case "Pro":
+    case "pro":
       return <Gem />;
+    // case "Lifetime":
+    // case "lifetime":
+    //   return <Gem />;
     default:
       return <CircleDollarSign />;
   }

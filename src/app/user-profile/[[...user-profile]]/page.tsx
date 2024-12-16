@@ -15,10 +15,8 @@ const getSubscriptionTailwind = (subscriptionType: string) => {
   switch (subscriptionType) {
     case "free":
       return "";
-    case "basic":
+    case "pro":
       return "text-primary-foreground dark:text-primary";
-    case "premium":
-      return "text-orange-500";
     default:
       return "";
   }

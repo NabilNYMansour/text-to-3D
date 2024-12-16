@@ -1,4 +1,5 @@
 import { mixpanel } from "@/mixpanel";
+import { captureException } from "@sentry/nextjs";
 
 export const sendToMixpanelServer = async (
   clerkId: string | undefined | null,
@@ -18,6 +19,6 @@ export const sendToMixpanelServer = async (
   try {
     mixpanel.track(eventName, properties);
   } catch (error) {
-    console.log(error);
+    captureException(error);
   }
 };

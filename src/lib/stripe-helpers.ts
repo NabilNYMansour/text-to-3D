@@ -6,22 +6,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export const priceIdToSubscriptionType = (priceId: string) => {
   switch (priceId) {
-    case process.env.STRIPE_BASIC_PRICE_ID:
-    case process.env.STRIPE_BASIC_YR_PRICE_ID:
-      return "basic";
-    case process.env.STRIPE_PREMIUM_PRICE_ID:
-    case process.env.STRIPE_PREMIUM_YR_PRICE_ID:
-      return "premium";
+    case process.env.STRIPE_PRO_PRICE_ID:
+    case process.env.STRIPE_PRO_YR_PRICE_ID:
+      return "pro";
+    // case process.env.STRIPE_LIFETIME_PRICE_ID:
+    //   return "lifetime";
   }
   return "free";
 }
 
 export const subscriptionTypeToPriceId = (subscriptionType: string, yearly: boolean) => {
   switch (subscriptionType) {
-    case "basic":
-      return yearly ? process.env.STRIPE_BASIC_YR_PRICE_ID : process.env.STRIPE_BASIC_PRICE_ID;
-    case "premium":
-      return yearly ? process.env.STRIPE_PREMIUM_YR_PRICE_ID : process.env.STRIPE_PREMIUM_PRICE_ID;
+    case "pro":
+      return yearly ? process.env.STRIPE_PRO_YR_PRICE_ID : process.env.STRIPE_PRO_PRICE_ID;
+    // case "lifetime":
+    //   return process.env.STRIPE_LIFETIME_PRICE_ID;
   }
   return null;
 }
@@ -63,7 +62,7 @@ export const newSubscription = async (userId: string, priceId: string, email: st
           missing_payment_method: 'cancel',
         },
       },
-      trial_period_days: 30,
+      // trial_period_days: 7,
       metadata: {
         userId: userId!,
         subscriptionType: subscriptionType,

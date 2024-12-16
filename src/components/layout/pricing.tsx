@@ -1,7 +1,7 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEffect, useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 import SwitchText from "@/components/ui/switch-text";
 import { CircleCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,9 @@ import { useMixpanel } from "@/lib/hooks";
 type PricingPlan = {
   name: string;
   description: string;
-  monthlyPrice: number;
-  yearlyPrice: number;
+  oneTimePrice?: number;
+  monthlyPrice?: number;
+  yearlyPrice?: number;
   features: string[];
   saveBadgeTailwind: string;
   everythingInPreviousText: string;
@@ -33,49 +34,44 @@ const pricingPlans: PricingPlan[] = [
     monthlyPrice: 0,
     yearlyPrice: 0,
     features: [
-      "Unlimited private shaders",
-      "Public shader sharing",
-      "iframe exports with logo",
+      "Unlimited projects",
+      "2k and 4k screenshots",
+      "Up to five 3D model downloads",
+      "Personal use",
     ],
-    saveBadgeTailwind: "",
     everythingInPreviousText: "",
+    saveBadgeTailwind: "",
     cardTailwind: "border-muted ",
     buttonTailwind: "text-muted-foreground ",
     buttonVariant: "outline"
   },
   {
-    name: "Basic",
-    description: "For serious shading enthusiasts",
-    monthlyPrice: 7,
-    yearlyPrice: 60,
+    name: "Pro",
+    description: "For designers and 3D professionals",
+    monthlyPrice: 5,
+    yearlyPrice: 30,
     features: [
-      "Asset uploads up to 5GB",
-      "iframe exports without logo",
-      "R3F exports with hosted assets",
+      "8k screenshots",
+      "Unlimited 3D model downloads",
+      "Custom fonts upload",
+      "Commercial use",
     ],
-    saveBadgeTailwind: "bg-muted ",
     everythingInPreviousText: "Everything in Free, plus:",
+    saveBadgeTailwind: "bg-muted ",
     cardTailwind: "border-primary ",
     buttonTailwind: "hover:bg-yellow-300 ",
     buttonVariant: "default"
   },
-  {
-    name: "Premium",
-    description: "For developers and professionals",
-    monthlyPrice: 15,
-    yearlyPrice: 120,
-    features: [
-      "AI Shader Copilot",
-      "Asset uploads up to 20GB",
-      "Advanced exporting options",
-    ],
-    saveBadgeTailwind: "bg-gradient-to-r from-orange-700 to-orange-500 text-primary shadow-orange-500 shadow-[0_0_10px_2px] ",
-    everythingInPreviousText: "Everything in Basic, plus:",
-    cardTailwind: "border-orange-500 shadow-[0_0_20px_2px] shadow-orange-500 bg-orange-100 dark:bg-yellow-900 ",
-    buttonTailwind: "bg-orange-500 hover:bg-orange-600 text-white ",
-    buttonVariant: "default"
-  },
 ];
+
+const calculateMonthlyCost = (yearly: boolean, yearlyPrice: number, monthlyPrice: number) => {
+  return yearly ? yearlyPrice / 12 : monthlyPrice;
+};
+const calculateSavingsPercentage = (yearlyPrice: number, monthlyPrice: number) => {
+  if (monthlyPrice === 0) return -1;
+  const monthlySavings = monthlyPrice - (yearlyPrice / 12);
+  return Math.round((monthlySavings / monthlyPrice) * 100);
+};
 
 const PricingCard = ({ plan, index, yearly, subscriptionType, userId, userLoaded, loading, setLoading, handleClick }: {
   plan: PricingPlan,
@@ -88,15 +84,6 @@ const PricingCard = ({ plan, index, yearly, subscriptionType, userId, userLoaded
   setLoading: (loading: boolean) => void
   handleClick?: () => void
 }) => {
-  const calculateMonthlyCost = () => {
-    return yearly ? plan.yearlyPrice / 12 : plan.monthlyPrice;
-  };
-  const calculateSavingsPercentage = () => {
-    if (plan.monthlyPrice === 0) return 0;
-    const monthlySavings = plan.monthlyPrice - (plan.yearlyPrice / 12);
-    return Math.round((monthlySavings / plan.monthlyPrice) * 100);
-  };
-
   const isCurrentPlan = useMemo(() => {
     return subscriptionType === plan.name.toLocaleLowerCase();
   }, [subscriptionType]);
@@ -107,6 +94,16 @@ const PricingCard = ({ plan, index, yearly, subscriptionType, userId, userLoaded
     return "Manage Plan";
   }, [isCurrentPlan, subscriptionType]);
 
+  const savingsPercentage = useMemo(() => {
+    if (!plan.yearlyPrice || !plan.monthlyPrice) return 0;
+    return calculateSavingsPercentage(plan.yearlyPrice, plan.monthlyPrice);
+  }, [plan.yearlyPrice, plan.monthlyPrice]);
+
+  const monthlyCost = useMemo(() => {
+    if (!plan.yearlyPrice || !plan.monthlyPrice) return 0;
+    return calculateMonthlyCost(yearly, plan.yearlyPrice, plan.monthlyPrice);
+  }, [yearly, plan.yearlyPrice, plan.monthlyPrice]);
+
   return (
     <Card key={index} className={plan.cardTailwind + "border-2 max-w-[325px] h-full flex flex-col"}>
       <CardHeader>
@@ -115,26 +112,31 @@ const PricingCard = ({ plan, index, yearly, subscriptionType, userId, userLoaded
             {getPricingIcon(plan.name)}
             {plan.name}
           </CardTitle>
-          {yearly && calculateSavingsPercentage() > 0 && (
+          {plan.name != "Free" && yearly && plan.monthlyPrice && plan.yearlyPrice && savingsPercentage > 0 &&
             <span className={plan.saveBadgeTailwind + "mr-2 px-2.5 py-0.5 rounded-full"}>
-              Save {calculateSavingsPercentage()}%
-            </span>
-          )}
+              Save {savingsPercentage}%
+            </span>}
         </div>
         <CardDescription>{plan.description}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="mb-6">
           <div className="text-4xl font-bold">
-            ${calculateMonthlyCost()}
-            <span className="text-lg font-normal text-muted-foreground">
-              /month
-            </span>
+            {plan.oneTimePrice ? <span>
+              ${plan.oneTimePrice}
+            </span> : <>
+              ${monthlyCost}
+              <span className="text-lg font-normal text-muted-foreground">
+                /month
+              </span>
+            </>}
           </div>
-          {plan.yearlyPrice > 0 ?
+          {plan.oneTimePrice ? <div className="text-sm text-muted-foreground mt-1">
+            one time payment
+          </div> : plan.yearlyPrice && plan.yearlyPrice > 0 ?
             yearly ?
               <div className="text-sm text-muted-foreground mt-1">
-                billed annually
+                ${plan.yearlyPrice} billed annually
               </div> : <br className="mt-1" /> :
             <div className="text-sm text-muted-foreground mt-1">
               Free
@@ -205,7 +207,7 @@ const Pricing = ({ handleClick }: { handleClick?: () => void }) => {
           />
         </div>
         <div className="cu-flex-center">
-          <div className="grid gap-8 lg:grid-cols-3 grid-">
+          <div className="grid gap-8 lg:grid-cols-2 grid-">
             {pricingPlans.map((plan, index) => (
               <PricingCard key={index}
                 index={index}

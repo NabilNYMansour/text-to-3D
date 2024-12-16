@@ -32,6 +32,7 @@ import MultiSelect from "@/components/elements/multi-select";
 import * as THREE from "three";
 import { Button } from "@/components/ui/button";
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Skeleton } from "../ui/skeleton";
 import { useClerk } from "@clerk/nextjs";
@@ -41,6 +42,7 @@ import dynamic from "next/dynamic";
 import Loader, { FullPageLoader } from "../elements/loader";
 import { useDebouncedState } from "@mantine/hooks";
 import { sendToMixpanelClient } from "@/mixpanel/client-side";
+import { captureException } from "@sentry/nextjs";
 
 //=========={ Export }==========//
 function saveArrayBuffer(buffer: ArrayBuffer, fileName: string) {
@@ -60,20 +62,20 @@ function save(blob: Blob, fileName: string) {
 
   document.body.removeChild(link)
 }
+
 function exportGLTF(scene: THREE.Scene) {
   const gltfExporter = new GLTFExporter();
   gltfExporter.parse(
-    scene,
-    function (result) {
+    scene, (result) => {
       if (result instanceof ArrayBuffer) {
-        saveArrayBuffer(result, 'threeTo3D.glb');
+        saveArrayBuffer(result, 'textTo3D.glb');
       } else {
         const output = JSON.stringify(result, null, 2);
-        saveString(output, 'threeTo3D.gltf');
+        saveString(output, 'textTo3D.gltf');
       }
-    },
-    function (error) {
-      console.log('An error happened during parsing', error);
+    }, (error) => {
+      alert('An error happened during parsing');
+      captureException(error);
     },
   );
 
@@ -88,6 +90,26 @@ const getGLTF = (textMeshRef: React.MutableRefObject<THREE.Mesh | null>, control
   exportScene.add(textMesh);
   exportGLTF(exportScene);
 }
+
+function exportSTL(scene: THREE.Scene) {
+  const stlExporter = new STLExporter();
+
+  const binaryData = stlExporter.parse(scene, { binary: true });
+  saveArrayBuffer(binaryData.buffer, 'model.stl');
+}
+const getSTL = (textMeshRef: React.MutableRefObject<THREE.Mesh | null>, controls: ControlsType) => {
+  if (!textMeshRef.current) return;
+  const exportScene = new THREE.Scene();
+  const textMesh = textMeshRef.current.clone();
+
+  if (controls.material === "Normal Material") {
+    textMesh.material = new THREE.MeshStandardMaterial();
+  }
+
+  exportScene.add(textMesh);
+  exportSTL(exportScene);
+};
+
 const getScreenShot = (gl: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera | THREE.OrthographicCamera, width: number, height: number) => {
   const originalZoom = camera.zoom;
   const originalSize = new THREE.Vector2();
@@ -726,6 +748,13 @@ const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClick
           sendToMixpanelClient(user?.id, "download-gltf", { slug });
         }}>
           Download GLTF
+        </Button>
+
+        <Button onClick={() => {
+          getSTL(textMeshRef, controls);
+          sendToMixpanelClient(user?.id, "download-stl", { slug });
+        }}>
+          Download STL
         </Button>
 
       </PopoverContent>

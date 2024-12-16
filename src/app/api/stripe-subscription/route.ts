@@ -4,6 +4,7 @@ import {
   subscriptionTypeToPriceId
 } from "@/lib/stripe-helpers";
 import { z } from 'zod';
+import { captureException } from "@sentry/nextjs";
 
 const schema = z.object({
   userId: z.string(),
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
   try {
     schema.parse({ userId, subscriptionType, yearly, email });
   } catch (error) {
-    console.log("Error occured:", error);
+    captureException(error);
     return new Response('Error occured', { status: 400 });
   }
 

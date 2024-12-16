@@ -1,8 +1,13 @@
+"use client";
+
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@radix-ui/react-scroll-area';
+import { useMixpanel } from '@/lib/hooks';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function NotFound() {
+  const pathname = usePathname();
+  useMixpanel("404", { pathname });
   return (
     <div className="p-10 cu-flex-center flex-col gap-4">
       <div className='text-9xl'>404</div>

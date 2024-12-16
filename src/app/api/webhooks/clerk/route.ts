@@ -4,6 +4,7 @@ import { UserJSON, WebhookEvent } from '@clerk/nextjs/server'
 import { createUser, deleteUserByClerkId, getSubscriptionTypeByClerkId } from '@/db/crud'
 import { deleteSubscription } from '@/lib/stripe-helpers'
 import { clerkClient } from '@clerk/nextjs/server'
+import { sendToMixpanelServer } from '@/mixpanel/server-side'
 
 // You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
 const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
@@ -49,10 +50,6 @@ export async function POST(req: Request) {
     })
   }
 
-  //=========={ Logging }==========//
-  console.log("=========={ Clerk Webhook }==========");
-  console.log(`Received event: ${evt.type}`);
-
   //=========={ Handle Event }==========//
   let clerkId: string;
   switch (evt.type) {
@@ -62,7 +59,7 @@ export async function POST(req: Request) {
       const clerk = await clerkClient();
       await createUser({ name: name, clerkId: clerkId, createAt: new Date().toISOString() });
       await clerk.users.updateUserMetadata(clerkId, { publicMetadata: { subscriptionType: "free" } }); // Set the default subscription type to free
-      console.log("User created:", clerkId);
+      sendToMixpanelServer(clerkId, 'user-created', { name: name });
       break;
 
     case 'user.deleted':
@@ -78,10 +75,9 @@ export async function POST(req: Request) {
         await deleteSubscription(clerkId); // Delete the subscription from Stripe
       }
       await deleteUserByClerkId(clerkId); // Delete the user from the database
-      console.log("User deleted:", clerkId);
+      sendToMixpanelServer(clerkId, 'user-deleted', { subscriptionType });
       break;
   }
-  console.log(`Event: ${JSON.stringify(evt, null, 2)}`);
 
   return new Response('', { status: 200 })
 }

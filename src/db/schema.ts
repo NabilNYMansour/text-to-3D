@@ -1,7 +1,7 @@
 import { ControlsType, defaultControls } from "@/lib/constants-and-types";
 import { date, integer, pgEnum, pgTable, varchar, jsonb, timestamp } from "drizzle-orm/pg-core";
 
-export const subscriptionEnum = pgEnum('subscription_enum', ['free', 'basic', 'premium']);
+export const subscriptionEnum = pgEnum('subscription_enum', ['free', 'pro']);
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   clerkId: varchar({ length: 255 }).notNull().unique(),
