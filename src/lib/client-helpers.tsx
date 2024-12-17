@@ -1,5 +1,6 @@
 "use client";
 
+import { SidebarContext } from "@/components/ui/sidebar";
 import { CircleDollarSign, CircleUserRound, Gem, Palette } from "lucide-react";
 
 export function capitalizeFirstLetter(s: string | undefined) {

@@ -1,5 +1,3 @@
-"use server";
-
 import { getSubscriptionByClerkId, getSubscriptionTypeByClerkId } from "@/db/crud";
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);

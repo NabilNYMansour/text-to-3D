@@ -1,4 +1,4 @@
-import { updateUserSubscription } from "@/db/crud";
+import { deleteAllFontsByClerkId, updateUserSubscription } from "@/db/crud";
 import { priceIdToSubscriptionType } from "@/lib/stripe-helpers";
 import { sendToMixpanelServer } from "@/mixpanel/server-side";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     let event = stripe.webhooks.constructEvent(payload, sig, process.env.STRIPE_WEBHOOK_SECRET!);
     const session = event.data.object as any;
     const userId = session.metadata.userId;
-    const subscriptionType = await priceIdToSubscriptionType(session.items.data[0].price.id);
+    const subscriptionType = priceIdToSubscriptionType(session.items.data[0].price.id);
 
     //=========={ DB syncing }==========//
     const clerk = await clerkClient();
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.deleted":
         sendToMixpanelServer(userId, "subscription-deleted", { subscriptionType, session_id: session.id });
         await updateUserSubscription(userId, "free", "");
+        await deleteAllFontsByClerkId(userId);
         await clerk.users.updateUserMetadata(userId, { publicMetadata: { subscriptionType: "free" } });
         break;
       default:

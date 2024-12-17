@@ -14,19 +14,18 @@ import {
   materials,
   MaterialType,
   fonts,
-  FontType,
   ActionResponseType
 } from "@/lib/constants-and-types";
 import { Canvas, useThree } from "@react-three/fiber";
 import { cloneElement, Dispatch, SetStateAction, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Box, BrickWall, Camera, Check, Download, Lightbulb, SendHorizontal, Settings, Theater, TriangleRight, X } from "lucide-react";
+import { Box, BrickWall, Camera, Check, CirclePlus, Download, Lightbulb, SendHorizontal, Settings, Theater, TriangleRight, X } from "lucide-react";
 import PanelAccordion from "@/components/elements/panel-accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ColorPicker } from "@/components/ui/color-picker";
-import { closeSiderbar, useDynamicDebouncedState, useMixpanel } from "@/lib/hooks";
+import { useDynamicDebouncedState, useMixpanel } from "@/lib/hooks";
 import GradientMaterial from "@/components/elements/gradient-material";
 import MultiSelect from "@/components/elements/multi-select";
 import * as THREE from "three";
@@ -43,6 +42,7 @@ import Loader, { FullPageLoader } from "../elements/loader";
 import { useDebouncedState } from "@mantine/hooks";
 import { sendToMixpanelClient } from "@/mixpanel/client-side";
 import { captureException } from "@sentry/nextjs";
+import AddFontDialog from "../elements/add-font-dialog";
 
 //=========={ Export }==========//
 function saveArrayBuffer(buffer: ArrayBuffer, fileName: string) {
@@ -386,8 +386,11 @@ const GeneralPanel = ({ controls, setControls, setControlsDebounced }: {
     </InputComponent>
     <InputComponent label="Font">
       <MultiSelect value={controls.font}
-        onChange={(value) => setControls({ ...controls, font: value as FontType })}
+        onChange={(value) => setControls({ ...controls, font: value })}
         options={fonts as unknown as string[]}
+        otherOptions={
+          <AddFontDialog />
+        }
       />
     </InputComponent>
     <InputComponent label="Extrustion">
@@ -693,74 +696,6 @@ const ScenePanel = ({ controls, setControls, setScenePanelOpened }: {
   </PanelAccordion>
 }
 
-//=========={ Client Side Actions Component }==========//
-const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClickScreenShot, slug }: {
-  textMeshRef: React.MutableRefObject<THREE.Mesh | null>,
-  controls: ControlsType,
-  setScreenshotResolution: Dispatch<SetStateAction<{ width: number, height: number }>>,
-  setClickScreenShot: Dispatch<SetStateAction<boolean>>,
-  slug?: string
-}) => {
-  const { user } = useClerk();
-
-  return <div className="absolute z-[1] flex items-center justify-between left-0 top-0 m-6 gap-2">
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button title="Screenshot">
-          <Download className="w-4 h-4" /> Export
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="flex flex-col gap-2">
-        <h1 className="flex items-center gap-1"><Camera className="w-4 h-4" />Screenshot</h1>
-        <Button className="grid grid-cols-2 w-full" size="lg"
-          onClick={() => {
-            setScreenshotResolution({ width: 1920, height: 1080 });
-            setClickScreenShot(true);
-          }}
-        >
-          <div className="flex">PNG HD</div>
-          <div>1920 x 1080</div>
-        </Button>
-
-        <Button className="grid grid-cols-2 w-full" size="lg"
-          onClick={() => {
-            setScreenshotResolution({ width: 3840, height: 2160 });
-            setClickScreenShot(true);
-          }}
-        >
-          <div className="flex">PNG 4K</div>
-          <div>3840 x 2160</div>
-        </Button>
-
-        <Button className="grid grid-cols-2 w-full" size="lg"
-          onClick={() => {
-            setScreenshotResolution({ width: 7680, height: 4320 });
-            setClickScreenShot(true);
-          }}
-        >
-          <div className="flex">PNG 8K</div>
-          <div>7680 x 4320</div>
-        </Button>
-
-        <h1 className="flex items-center gap-1 mt-2"><Box className="w-4 h-4" /> 3D Model</h1>
-        <Button onClick={() => {
-          getGLTF(textMeshRef, controls);
-          sendToMixpanelClient(user?.id, "download-gltf", { slug });
-        }}>
-          Download GLTF
-        </Button>
-
-        <Button onClick={() => {
-          getSTL(textMeshRef, controls);
-          sendToMixpanelClient(user?.id, "download-stl", { slug });
-        }}>
-          Download STL
-        </Button>
-
-      </PopoverContent>
-    </Popover>
-  </div>
-}
 //=========={ Server Side Actions Component }==========//
 const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, updateName }: {
   name?: string,
@@ -830,6 +765,7 @@ const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, upd
         <h1
           className="text-lg font-bold truncate whitespace-nowrap cursor-pointer w-full hover:bg-muted rounded-md p-1"
           onClick={() => setEditingName(true)}
+          title="Click to edit"
         >
           {newName}
         </h1>
@@ -841,18 +777,83 @@ const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, upd
   }
 };
 
+//=========={ Client Side Actions Component }==========//
+const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClickScreenShot, slug }: {
+  textMeshRef: React.MutableRefObject<THREE.Mesh | null>,
+  controls: ControlsType,
+  setScreenshotResolution: Dispatch<SetStateAction<{ width: number, height: number }>>,
+  setClickScreenShot: Dispatch<SetStateAction<boolean>>,
+  slug?: string
+}) => {
+  const { user } = useClerk();
+
+  return <div className="absolute z-[1] flex items-center justify-between left-0 top-0 m-6 gap-2">
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button title="Screenshot">
+          <Download className="w-4 h-4" /> Export
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="flex flex-col gap-2">
+        <h1 className="flex items-center gap-1"><Camera className="w-4 h-4" />Screenshot</h1>
+        <Button className="grid grid-cols-2 w-full" size="lg"
+          onClick={() => {
+            setScreenshotResolution({ width: 1920, height: 1080 });
+            setClickScreenShot(true);
+          }}
+        >
+          <div className="flex">PNG HD</div>
+          <div>1920 x 1080</div>
+        </Button>
+
+        <Button className="grid grid-cols-2 w-full" size="lg"
+          onClick={() => {
+            setScreenshotResolution({ width: 3840, height: 2160 });
+            setClickScreenShot(true);
+          }}
+        >
+          <div className="flex">PNG 4K</div>
+          <div>3840 x 2160</div>
+        </Button>
+
+        <Button className="grid grid-cols-2 w-full" size="lg"
+          onClick={() => {
+            setScreenshotResolution({ width: 7680, height: 4320 });
+            setClickScreenShot(true);
+          }}
+        >
+          <div className="flex">PNG 8K</div>
+          <div>7680 x 4320</div>
+        </Button>
+
+        <h1 className="flex items-center gap-1 mt-2"><Box className="w-4 h-4" /> 3D Model</h1>
+        <Button onClick={() => {
+          getGLTF(textMeshRef, controls);
+          sendToMixpanelClient(user?.id, "download-gltf", { slug });
+        }}>
+          Download GLTF
+        </Button>
+
+        <Button onClick={() => {
+          getSTL(textMeshRef, controls);
+          sendToMixpanelClient(user?.id, "download-stl", { slug });
+        }}>
+          Download STL
+        </Button>
+
+      </PopoverContent>
+    </Popover>
+  </div>
+}
+
 //=========={ Main App }==========//
-type MainAppProps = {
+const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls }: {
   name?: string,
   updateName?: (clerkId: string, slug: string, name: string) => Promise<ActionResponseType>,
   slug?: string,
   initControls?: ControlsType
   updateControls?: (clerkId: string, slug: string, payload: ControlsType) => Promise<ActionResponseType>
-};
-const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls }: MainAppProps) => {
-  //=========={ Close Sidebar }==========//
-  closeSiderbar();
-
+}) => {
   //=========={ Mixpanel }==========//
   useMixpanel("main-app", { slug });
 
@@ -962,30 +963,3 @@ export default dynamic(() => Promise.resolve(MainApp), {
   ssr: false,
   loading: () => <FullPageLoader />
 });
-
-
-//=========={ !!!TEST!!! }==========//
-// import { convertFontToJson } from "@/lib/facetype";
-
-// useEffect(() => {
-//   const test = async () => {
-//     const fontUrl = "/NotoEmoji.ttf"; // URL to the font in the public folder
-//     const response = await fetch(fontUrl);
-
-//     if (!response.ok) {
-//       throw new Error(`Failed to fetch font file: ${response.statusText}`);
-//     }
-
-//     const fontBuffer = await response.arrayBuffer();
-//     const fontFile = new File([fontBuffer], "font.ttf");
-
-//     convertFontToJson(fontFile, { jsonFormat: true })
-//       .then((json) => {
-//         console.log(json); // Use or save the JSON string
-//       })
-//       .catch((err) => {
-//         console.error("Error converting font:", err);
-//       });
-//   }
-//   test();
-// }, []);

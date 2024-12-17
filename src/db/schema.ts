@@ -26,3 +26,15 @@ export const projectsTable = pgTable("projects", {
 
 export type InsertProject = typeof projectsTable.$inferInsert;
 export type SelectProject = typeof projectsTable.$inferSelect;
+
+export const fontsTable = pgTable("fonts", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  clerkId: varchar({ length: 255 }).notNull().references(() => usersTable.clerkId),
+  name: varchar({ length: 255 }).notNull(),
+  url: varchar({ length: 255 }).notNull(),
+  key: varchar({ length: 255 }).notNull(),
+  createAt: date().notNull().default("now()"),
+});
+
+export type InsertFont = typeof fontsTable.$inferInsert;
+export type SelectFont = typeof fontsTable.$inferSelect;

@@ -9,11 +9,11 @@ interface LinkButtonProps extends ButtonProps {
 
 const LinkButton: React.FC<LinkButtonProps> = ({ href, prefetch, ...props }) => {
   return (
-    <Link href={href}>
+    <a href={href}>
       <Button {...props}>
         {props.children}
       </Button>
-    </Link>
+    </a>
   );
 };
 

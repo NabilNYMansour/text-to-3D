@@ -20,7 +20,6 @@ import { useUser } from '@clerk/nextjs';
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import Loader, { DotsLoader } from '../elements/loader';
-import { useSidebar } from '../ui/sidebar';
 import { useMixpanel } from '@/lib/hooks';
 
 const ProjectPopover = ({ project, deleteProject, updateName, setIsHovered }: {
@@ -125,10 +124,8 @@ const ProjectCard = ({ project, deleteProject, updateName }: {
 }) => {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
-  const sidebar = useSidebar();
 
   const handleClick = () => {
-    sidebar.setOpen(false);
     router.push(`/project/${project.slug}`);
   }
 

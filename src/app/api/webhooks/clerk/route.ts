@@ -1,7 +1,7 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { UserJSON, WebhookEvent } from '@clerk/nextjs/server'
-import { createUser, deleteUserByClerkId, getSubscriptionTypeByClerkId } from '@/db/crud'
+import { createUser, deleteAllFontsByClerkId, deleteUserByClerkId, getSubscriptionTypeByClerkId } from '@/db/crud'
 import { deleteSubscription } from '@/lib/stripe-helpers'
 import { clerkClient } from '@clerk/nextjs/server'
 import { sendToMixpanelServer } from '@/mixpanel/server-side'
@@ -74,6 +74,7 @@ export async function POST(req: Request) {
       if (subscriptionType !== 'free' && subscriptionType !== null) { // if stripe subscription exists
         await deleteSubscription(clerkId); // Delete the subscription from Stripe
       }
+      await deleteAllFontsByClerkId(clerkId); // Delete the fonts from the database
       await deleteUserByClerkId(clerkId); // Delete the user from the database
       sendToMixpanelServer(clerkId, 'user-deleted', { subscriptionType });
       break;

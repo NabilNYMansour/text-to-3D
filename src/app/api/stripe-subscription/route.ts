@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: true, status: "already-subscribed", redirectUrl: process.env.STRIPE_CUSTOMER_PORTAL_URL! }, { status: 200 });
   }
 
-  const priceId = await subscriptionTypeToPriceId(subscriptionType, yearly);
+  const priceId = subscriptionTypeToPriceId(subscriptionType, yearly);
   if (!userId || !priceId || !subscriptionType) {
     return Response.json({ status: "unauthorized" }, { status: 401 });
   }

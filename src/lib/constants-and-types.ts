@@ -9,11 +9,10 @@ export const materials = ["Standard Material", "Gradient Material", "Basic Mater
 export type MaterialType = typeof materials[number];
 
 export const fonts = ["Inter", "Rubik", "Caviar Dreams", "Amiri", "Noto"] as const;
-export type FontType = typeof fonts[number];
 
 export const defaultControls = {
   text: "hello\nworld",
-  font: "Inter" as FontType,
+  font: "Inter",
 
   height: { min: 0.1, max: 10, step: 0.1, value: 0.1 },
   curveSegments: { min: 1, max: 32, step: 1, value: 16 },

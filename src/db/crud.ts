@@ -1,9 +1,10 @@
 "use server";
 
-import { InsertProject, InsertUser, projectsTable, SelectProject, SelectUser, usersTable } from "./schema";
+import { fontsTable, InsertProject, InsertUser, projectsTable, SelectProject, SelectUser, usersTable } from "./schema";
 import { db } from '.';
 import { and, desc, eq, like, count } from "drizzle-orm";
 import { ControlsType } from "@/lib/constants-and-types";
+import { utapi } from "@/uploadthing/server-side";
 
 //=========={ User }==========//
 export async function createUser(data: InsertUser) {
@@ -100,4 +101,24 @@ export async function getUserProjectsCount(clerkId: SelectProject['clerkId'], se
     .select({ count: count() })
     .from(projectsTable)
     .where(and(eq(projectsTable.clerkId, clerkId), like(projectsTable.name, `%${searchTerm}%`)));
+}
+
+//=========={ Font }==========//
+export async function createFont(clerkId: SelectUser['clerkId'], name: string, url: string, key:string) {
+  await db.insert(fontsTable).values({ clerkId, name, url, key });
+}
+
+export async function getFontsByClerkId(clerkId: SelectUser['clerkId']): Promise<Array<{ name: string, url: string }>> {
+  return await db.select({ name: fontsTable.name, url: fontsTable.url }).from(fontsTable).where(eq(fontsTable.clerkId, clerkId));
+}
+
+export async function deleteFontByKey(clerkId: SelectUser['clerkId'], key: string) {
+  await utapi.deleteFiles(key);
+  await db.delete(fontsTable).where(and(eq(fontsTable.clerkId, clerkId), eq(fontsTable.key, key)));
+}
+
+export async function deleteAllFontsByClerkId(clerkId: SelectUser['clerkId']) {
+  const fonts = await db.select({ key: fontsTable.key }).from(fontsTable).where(eq(fontsTable.clerkId, clerkId));
+  await utapi.deleteFiles(fonts.map((font) => font.key));
+  await db.delete(fontsTable).where(eq(fontsTable.clerkId, clerkId));
 }

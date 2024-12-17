@@ -5,16 +5,14 @@ import LinkButton from '../buttons/link-button';
 import { Box, CirclePlus, Home } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { DotsLoader } from './loader';
-import { useSidebar } from '../ui/sidebar';
 
 const HeaderActions = () => {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
-  const sidebar = useSidebar();
 
   if (isLoaded) {
     return pathname.split("/")[1] !== "project" ?
-      <LinkButton href="/project" variant="outline" className="cu-shadow select-none" onClick={() => sidebar.setOpen(false)}>
+      <LinkButton href="/project" variant="outline" className="cu-shadow select-none">
         <CirclePlus />New Project
       </LinkButton> :
       user ?
