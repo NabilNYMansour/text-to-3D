@@ -35,4 +35,6 @@ const SwitchText = React.forwardRef<
   </div>
 ))
 
+SwitchText.displayName = "SwitchText"
+
 export default SwitchText;

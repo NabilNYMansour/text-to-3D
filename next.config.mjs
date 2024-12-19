@@ -7,10 +7,12 @@ export default withSentryConfig(nextConfig, {
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
   org: "personal-0i3",
-  project: "javascript-nextjs",
+  project: "text-to-3d",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
+
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
@@ -20,7 +22,7 @@ export default withSentryConfig(nextConfig, {
 
   // Automatically annotate React components to show their full name in breadcrumbs and session replay
   reactComponentAnnotation: {
-    enabled: true,
+    enabled: false, // had to make it false because of https://github.com/getsentry/sentry-javascript-bundler-plugins/issues/530
   },
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
@@ -40,4 +42,8 @@ export default withSentryConfig(nextConfig, {
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
   automaticVercelMonitors: true,
+
+  sourcemaps: {
+    disable: true,
+  }
 });

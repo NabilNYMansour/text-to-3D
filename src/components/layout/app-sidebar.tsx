@@ -9,14 +9,16 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Box, CirclePlus, Home, Images, LogIn, LogOut, Mail, Paintbrush, ScrollText, Settings } from "lucide-react";
+import { Box, FileType, Home, LogIn, MessageSquare, ScrollText, Settings } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { FullPageLoader } from "../elements/loader";
 import SubscriptionButtonDialog from "../buttons/subscription-button-dialog";
 import Image from "next/image";
+import { useEffect } from "react";
 
 const data = {
   navMain: [
@@ -44,6 +46,13 @@ const data = {
           showSignedOut: false,
         },
         {
+          title: "My Fonts",
+          url: "/my-fonts",
+          icon: <FileType />,
+          showSignedIn: true,
+          showSignedOut: false,
+        },
+        {
           title: "Sign in",
           url: "/sign-in",
           icon: <LogIn />,
@@ -64,7 +73,7 @@ const data = {
         {
           title: "Pricing",
           url: "/pricing",
-          icon: <CirclePlus />,
+          icon: <Home />,
           showSignedIn: true,
           showSignedOut: true,
         },
@@ -83,9 +92,9 @@ const data = {
           showSignedOut: true,
         },
         {
-          title: "Contact",
+          title: "Feedback",
           url: "mailto:nabilnymansour@gmail.com",
-          icon: <Mail />,
+          icon: <MessageSquare />,
           showSignedIn: true,
           showSignedOut: true,
         },
@@ -96,11 +105,16 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
+  const { open } = useSidebar();
+
+  useEffect(() => {
+    user?.update({ unsafeMetadata: { sidebarOpen: open } });
+  }, [open]);
 
   return (
     <Sidebar {...props}>
-      <SidebarHeader className="flex flex-row items-center py-4 border-b border-transparent">
+      <SidebarHeader className="flex flex-row items-center py-2 border-b border-transparent">
         <Link href="/" className="w-full hover:bg-muted rounded-md p-4">
           <Image src="/long-text-logo.png" alt="logo"
             priority

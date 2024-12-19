@@ -5,7 +5,7 @@ import { Skeleton } from '../ui/skeleton';
 import { TextTo3D } from './main-app';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '../ui/button';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CirclePlus, Ellipsis, ExternalLink, Pencil, Plus, SendHorizontal, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, CirclePlus, Ellipsis, ExternalLink, Pencil, SendHorizontal, Trash2 } from 'lucide-react';
 import { ActionResponseType, ControlsType } from '@/lib/constants-and-types';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import {
@@ -105,7 +105,7 @@ const ProjectPopover = ({ project, deleteProject, updateName, setIsHovered }: {
 
       <Button variant="destructive"
         onClick={() => {
-          user && deleteProject(user.id, project.slug);
+          if (user) deleteProject(user.id, project.slug);
           router.refresh();
         }}
       >
@@ -165,10 +165,10 @@ const ProjectCard = ({ project, deleteProject, updateName }: {
 const NoProjects = () => {
   const router = useRouter();
 
-  return <div className='cu-flex-center flex-col gap-2 mt-8 p-2 h-full'>
+  return <div className='cu-flex-center flex-col gap-2 mt-8 p-2 h-full text-center'>
     <h2 className="text-lg font-semibold">No projects found</h2>
     <p className="text-sm text-muted-foreground">Create a new project to get started</p>
-    <Button onClick={() => router.push('/project')}>
+    <Button onClick={() => router.push('/project')} variant="outline" className='cu-shadow'>
       <CirclePlus className='w-4 h-4' /> New Project
     </Button>
   </div>
@@ -281,7 +281,7 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
     <div className="w-full max-w-5xl h-full flex flex-col items-center gap-2 p-4">
       {latestProjects.length > 0 && <>
         <h1 className="text-xl font-bold w-full">Recent</h1>
-        <div className="w-full flex flex-wrap gap-2 select-none">
+        <div className="w-full flex flex-wrap gap-2 select-none justify-center sm:justify-normal">
           {latestProjects.map((project) => <ProjectCard
             key={project.slug}
             project={project}
@@ -295,8 +295,8 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
 
       <div className='w-full flex items-center gap-2'>
         <h1 className="text-xl font-bold">All Projects</h1>
-        <Button onClick={() => router.push('/project')} size="icon" variant="ghost">
-          <Plus />
+        <Button onClick={() => router.push('/project')} size="icon" variant="outline" className='cu-shadow'>
+          <CirclePlus />
         </Button>
       </div>
       <Input type="search" placeholder="Search projects" className="w-full"
@@ -309,9 +309,8 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
             <DotsLoader />
           </div> : <div>
             No projects found
-          </div> :
-        <>
-          <div className="w-full flex flex-wrap gap-2 select-none">
+          </div> : <>
+          <div className="w-full flex flex-wrap gap-2 select-none justify-center sm:justify-normal">
             {projects.map((project) => <ProjectCard
               key={project.slug}
               project={project}

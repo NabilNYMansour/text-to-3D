@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
-import { DotsLoader} from "../elements/loader";
+import { DotsLoader } from "../elements/loader";
 import PricingDialog from "../elements/pricing-dialog";
 import { Button } from "../ui/button";
 import { capitalizeFirstLetter, getPricingButtonTailwind, getPricingButtonVariant, getPricingIcon } from "@/lib/client-helpers";
@@ -16,6 +16,10 @@ const SubscriptionButtonDialog = () => {
       "Pricing",
     [user]
   );
+
+  // if (subscriptionButtonText === "Pro") {
+  //   return null;
+  // }
 
   return (
     <PricingDialog>

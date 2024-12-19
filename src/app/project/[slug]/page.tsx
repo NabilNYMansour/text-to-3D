@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import React from 'react';
 import * as db from '@/db/crud';
 import { unstable_noStore as noStore } from 'next/cache';
-import { UpdateControls, UpdateName } from '@/lib/server-actions';
+import { CheckFont, UpdateControls, UpdateName } from '@/lib/server-actions';
 
 const Page = async ({ params }: { params: { slug: string } }) => {
   noStore();
@@ -23,7 +23,18 @@ const Page = async ({ params }: { params: { slug: string } }) => {
 
   await db.updateLastOpenedAtBySlug(slug);
 
-  return <MainApp name={name} updateName={UpdateName} slug={slug} initControls={payload} updateControls={UpdateControls} />;
+  const userFonts = await db.getFontsByClerkId(clerkId);
+
+  await CheckFont(clerkId, slug, payload);
+
+  return <MainApp
+    name={name}
+    updateName={UpdateName}
+    slug={slug}
+    initControls={payload}
+    updateControls={UpdateControls}
+    userFonts={userFonts}
+  />;
 };
 
 export default Page;

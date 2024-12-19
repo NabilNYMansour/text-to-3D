@@ -1,7 +1,6 @@
 "use client";
 
-import { SidebarContext } from "@/components/ui/sidebar";
-import { CircleDollarSign, CircleUserRound, Gem, Palette } from "lucide-react";
+import { CircleDollarSign, CircleUserRound, Gem } from "lucide-react";
 
 export function capitalizeFirstLetter(s: string | undefined) {
   if (!s) return 'Free';
@@ -35,7 +34,7 @@ export const getPricingButtonVariant = (subscriptionType: string) => {
     // case "lifetime":
     //   return "default";
     default:
-      return "secondary";
+      return "ghost";
   }
 }
 

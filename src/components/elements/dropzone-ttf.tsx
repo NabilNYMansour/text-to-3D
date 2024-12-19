@@ -36,7 +36,6 @@ export function Dropzone({ onFileAdded, className }: DropzoneProps) {
     accept: { 'font/ttf': ACCEPTED_FILE_TYPES },
     maxFiles: 1,
     multiple: false,
-    noClick: true,
     onDropRejected: (fileRejections) => {
       const rejection = fileRejections[0]
       if (rejection.errors[0].code === 'file-too-large') {
@@ -61,7 +60,7 @@ export function Dropzone({ onFileAdded, className }: DropzoneProps) {
   }
 
   return (
-    <div className={cn("w-[350px] h-[180px]", className)}>
+    <div className={cn("w-[350px] h-[180px] select-none", className)}>
       <div
         {...getRootProps()}
         className={cn(

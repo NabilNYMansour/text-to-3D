@@ -23,23 +23,11 @@ export const useOpenSidebar = () => {
   }, []);
 }
 
-export const closeSiderbar = () => {
+export const useCloseSiderbar = () => {
   const sidebar = useSidebar();
   useEffect(() => {
     sidebar.setOpen(false);
   }, []);
-}
-
-export const useTimeoutEffect = (callback: () => void, timeout: number, deps: any[] = []) => {
-  const [timer, setTimer] = useState<number | null>(null);
-  useEffect(() => {
-    setTimer(window.setTimeout(callback, timeout));
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
-  }, deps);
 }
 
 export function useDynamicDebouncedState<T>(initialValue: T, delay: number = 500) {
@@ -59,7 +47,7 @@ export function useDynamicDebouncedState<T>(initialValue: T, delay: number = 500
   return [value, setValue, debouncedValue, setDebounced] as const;
 }
 
-export function useMixpanel(eventName: string, data?: Record<string, any>) {
+export function useMixpanel(eventName: string, data?: Record<string, any>) { // eslint-disable-line
   const hasRan = useRef<boolean>(false);
   const { user } = useUser();
 

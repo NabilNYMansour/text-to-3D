@@ -1,24 +1,34 @@
 import MainApp from "@/components/layout/main-app";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import * as db from "@/db/crud";
-import { defaultControls } from "@/lib/constants-and-types";
+import { createProject, getUserProjectsCount } from "@/db/crud";
+import { defaultControls, SearchParams } from "@/lib/constants-and-types";
 import { unstable_noStore as noStore } from "next/cache";
+import { decodeJson } from "@/lib/utils";
+import { isUserSyncedWithDB } from "@/lib/server-helpers";
+import UserBeingProcessed from "@/components/elements/user-being-processed";
 
-const Page = async () => {
+const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
   noStore();
 
+  let controls = defaultControls;
+  const controlsParam = searchParams.controls
+  if (searchParams.controls) controls = decodeJson(String(controlsParam));
+
   const user = await currentUser();
-  if (!user) return <MainApp />;
+  if (!user) return <MainApp initControls={controls} />;
+
+  const isSynced = await isUserSyncedWithDB();
+  if (!isSynced) return <UserBeingProcessed />;
 
   const slug = crypto.randomUUID().replace(/-/g, '');
-  const projectsCount = (await db.getUserProjectsCount(user.id, ""))[0].count;
+  const projectsCount = (await getUserProjectsCount(user.id, ""))[0].count;
 
-  await db.createProject({
+  await createProject({
     clerkId: user.id,
     name: "New Project " + (projectsCount + 1),
     slug: slug,
-    payload: defaultControls,
+    payload: controls,
   });
 
   redirect(`project/${slug}`);

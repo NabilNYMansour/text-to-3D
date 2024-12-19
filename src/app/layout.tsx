@@ -5,12 +5,12 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import ClerkUserButton from "@/components/buttons/clerk-user-button";
-
-import { Geologica } from "next/font/google"
 import { ThemeToggle } from "@/components/buttons/theme-toggle";
 import HeaderActions from "@/components/elements/header-actions";
 import { currentUser } from "@clerk/nextjs/server";
-const font = Geologica({ weight: "400", subsets: ["latin"] });
+import { Geologica } from "next/font/google"
+
+const font = Geologica({ weight: "400", subsets: ["latin"], display: "swap", adjustFontFallback: false });
 
 export const metadata: Metadata = {
   title: "Create Next App",

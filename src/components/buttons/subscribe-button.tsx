@@ -1,10 +1,15 @@
 'use client';
 
-import { MouseEvent } from 'react';
+import { MouseEvent, useState } from 'react';
 import { Button, ButtonProps } from '../ui/button';
 import { loadStripe } from "@stripe/stripe-js";
 import { useUser } from '@clerk/nextjs';
 import { captureException } from '@sentry/nextjs';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 const createSubscription = async (
   userId: string,
@@ -40,8 +45,6 @@ const createSubscription = async (
 
 export interface SubscribeButtonProps extends ButtonProps {
   subscriptionType: string;
-  successUrl: string;
-  cancelUrl: string;
   yearly: boolean;
   setLoading: (loading: boolean) => void;
   onParentGivenClick?: (e: MouseEvent) => void;
@@ -49,23 +52,41 @@ export interface SubscribeButtonProps extends ButtonProps {
 const SubscribeButton = (props: SubscribeButtonProps) => {
   const {
     subscriptionType,
-    successUrl,
-    cancelUrl,
     yearly,
     setLoading,
     onParentGivenClick,
     ...buttonProps
   } = props;
   const { user } = useUser();
-  const handleSubmit = async (e: any) => {
+  const [popOverOpen, setPopOverOpen] = useState(false);
+
+  const handleSubmit = async (e: MouseEvent) => {
     if (!user) return;
     setLoading(true);
     await createSubscription(user.id, user.emailAddresses[0].emailAddress, subscriptionType, yearly);
-    onParentGivenClick && onParentGivenClick(e);
+    if (onParentGivenClick) onParentGivenClick(e);
   }
 
-  return (
-    <Button onClick={handleSubmit} {...buttonProps} />
-  );
+  if (user?.publicMetadata.subscriptionType === "pro" && subscriptionType === "free") {
+    return <Popover open={popOverOpen} onOpenChange={setPopOverOpen}>
+      <PopoverTrigger className='w-full'><Button onClick={undefined} {...buttonProps} /></PopoverTrigger>
+      <PopoverContent>
+        <div className='pb-2'>
+          <p>Cancelling your subscription will <b>delete</b> all your fonts. </p>
+          <p className='text-red-500'>Are you sure you want to cancel?</p>
+        </div>
+        <Button variant="destructive" className='w-full'
+          onClick={(e) => {
+            handleSubmit(e);
+            setPopOverOpen(false);
+          }}
+        >
+          Yes, Cancel
+        </Button>
+      </PopoverContent>
+    </Popover>
+  }
+
+  return <Button onClick={handleSubmit} {...buttonProps} />
 };
 export default SubscribeButton;

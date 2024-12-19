@@ -22,7 +22,7 @@ const getSubscriptionTailwind = (subscriptionType: string) => {
   }
 }
 
-async function Page() {
+function Page() {
   const { resolvedTheme } = useTheme();
   const user = useUser();
 

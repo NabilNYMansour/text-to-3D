@@ -8,11 +8,17 @@ export type EnvironmentBackgroundType = typeof environmentBackgrounds[number];
 export const materials = ["Standard Material", "Gradient Material", "Basic Material", "Normal Material", "Wireframe Material"] as const;
 export type MaterialType = typeof materials[number];
 
-export const fonts = ["Inter", "Rubik", "Caviar Dreams", "Amiri", "Noto"] as const;
+export const fonts = [
+  { name: "Inter", url: "/Inter.json" },
+  { name: "Rubik", url: "/Rubik.json" },
+  { name: "Caviar Dreams", url: "/CaviarDreams.json" },
+  { name: "Amiri", url: "/Amiri.json" },
+  { name: "Noto", url: "/Noto.json" }
+];
 
 export const defaultControls = {
   text: "hello\nworld",
-  font: "Inter",
+  font: fonts[0],
 
   height: { min: 0.1, max: 10, step: 0.1, value: 0.1 },
   curveSegments: { min: 1, max: 32, step: 1, value: 16 },

@@ -95,7 +95,7 @@
 }
 
 .cu-shadow {
-  @apply shadow-inner shadow-muted;
+  @apply shadow-[inset_0_0_5px_1px] shadow-muted;
 }
 
 .cu-flex-center {

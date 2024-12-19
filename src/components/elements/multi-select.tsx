@@ -12,13 +12,13 @@ interface MaterialDropdownProps {
   value: string;
   onChange: (value: string) => void;
   options: string[];
-  otherOptions?: React.ReactNode;
+  secondaryOptions?: string[];
 }
 
-const MultiSelect: React.FC<MaterialDropdownProps> = ({ value, onChange, options, otherOptions }) => {
+const MultiSelect: React.FC<MaterialDropdownProps> = ({ value, onChange, options, secondaryOptions }) => {
   return (
-    <Select defaultValue={value} onValueChange={(value) => onChange(value)}>
-      <SelectTrigger>
+    <Select defaultValue={value} value={value} onValueChange={(value) => onChange(value)}>
+      <SelectTrigger className="overflow-hidden">
         <SelectValue>{value}</SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -27,11 +27,13 @@ const MultiSelect: React.FC<MaterialDropdownProps> = ({ value, onChange, options
             {option}
           </SelectItem>
         ))}
-        {otherOptions && <>
-          <Separator className="mt-2"/>
-          <div className="grid items-center p-2">
-            {otherOptions}
-          </div>
+        {secondaryOptions && secondaryOptions.length > 0 && <>
+          <Separator className="my-2" />
+          {secondaryOptions.map((option, index) => (
+            <SelectItem key={index} value={option}>
+              {option}
+            </SelectItem>
+          ))}
         </>}
       </SelectContent>
     </Select>

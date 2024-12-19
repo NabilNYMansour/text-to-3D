@@ -18,14 +18,14 @@ import {
 } from "@/lib/constants-and-types";
 import { Canvas, useThree } from "@react-three/fiber";
 import { cloneElement, Dispatch, SetStateAction, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Box, BrickWall, Camera, Check, CirclePlus, Download, Lightbulb, SendHorizontal, Settings, Theater, TriangleRight, X } from "lucide-react";
+import { Box, BrickWall, Camera, Check, Download, Lightbulb, SendHorizontal, Settings, Theater, TriangleRight, X } from "lucide-react";
 import PanelAccordion from "@/components/elements/panel-accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, encodeJson } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ColorPicker } from "@/components/ui/color-picker";
-import { useDynamicDebouncedState, useMixpanel } from "@/lib/hooks";
+import { useCloseSiderbar, useDynamicDebouncedState, useMixpanel } from "@/lib/hooks";
 import GradientMaterial from "@/components/elements/gradient-material";
 import MultiSelect from "@/components/elements/multi-select";
 import * as THREE from "three";
@@ -43,6 +43,7 @@ import { useDebouncedState } from "@mantine/hooks";
 import { sendToMixpanelClient } from "@/mixpanel/client-side";
 import { captureException } from "@sentry/nextjs";
 import AddFontDialog from "../elements/add-font-dialog";
+import { useSearchParams } from "next/navigation";
 
 //=========={ Export }==========//
 function saveArrayBuffer(buffer: ArrayBuffer, fileName: string) {
@@ -95,7 +96,7 @@ function exportSTL(scene: THREE.Scene) {
   const stlExporter = new STLExporter();
 
   const binaryData = stlExporter.parse(scene, { binary: true });
-  saveArrayBuffer(binaryData.buffer, 'model.stl');
+  saveArrayBuffer(binaryData.buffer as ArrayBuffer, 'model.stl');
 }
 const getSTL = (textMeshRef: React.MutableRefObject<THREE.Mesh | null>, controls: ControlsType) => {
   if (!textMeshRef.current) return;
@@ -213,7 +214,6 @@ const SceneObjects = ({ controls, textMeshRef, materialComponent }:
     materialComponent: React.ReactElement
   }
 ) => {
-  const font = useMemo(() => "/" + controls.font.replaceAll(" ", "") + ".json", [controls.font]);
   return <>
     <Center>
       <Text3D
@@ -228,7 +228,7 @@ const SceneObjects = ({ controls, textMeshRef, materialComponent }:
         lineHeight={controls.lineHeight.value}
         letterSpacing={controls.letterSpacing.value}
         size={controls.size.value}
-        font={font}
+        font={controls.font.url}
         castShadow receiveShadow
       >
         {(controls.material === "Gradient Material" ? "\n" : "") // A quick hack to fix the gradient material
@@ -326,7 +326,7 @@ export const TextTo3D = ({
   return <Canvas shadows
     className={cn("rounded-md bg-background transition-opacity duration-300", className)}
     gl={{ preserveDrawingBuffer: true }}
-    camera={controls.perspective ? { zoom: 1 } : { zoom: zoom * 100, near: -1000, far: 1000 }}
+    camera={controls.perspective ? { zoom: 1 } : { zoom: zoom * 100, near: -1000, far: 1000, position: [-0.5, 0.2, 1] }}
     orthographic={!controls.perspective}
     key={controls.perspective ? "perspective" : "orthographic"}
     style={{ opacity: clickScreenShot ? 0 : 1 }}
@@ -350,7 +350,7 @@ export const TextTo3D = ({
     <Environment
       key={controls.preset}
       preset={controls.preset.toLowerCase() as EnvironmentProps["preset"]}
-      extensions={(loader: any) => loader.setDataType(THREE.FloatType)}
+      extensions={(loader: any) => loader.setDataType(THREE.FloatType)} // eslint-disable-line
       background={controls.background === "Environment" && controls.perspective}
     />
     {controls.lightEnabled && <directionalLight castShadow
@@ -365,12 +365,42 @@ export const TextTo3D = ({
     {orbitControlsEnabled && <OrbitControls makeDefault />}
   </Canvas>
 }
-
-//=========={ Panels }==========//
-const GeneralPanel = ({ controls, setControls, setControlsDebounced }: {
+const FontSelectorAndUpdater = ({ controls, setControls, userFonts }: {
   controls: ControlsType,
   setControls: Dispatch<SetStateAction<ControlsType>>,
-  setControlsDebounced: (newValue: SetStateAction<ControlsType>) => void
+  userFonts?: { name: string, url: string }[]
+}) => {
+  return <div className="flex gap-1 w-full">
+    <MultiSelect value={controls.font.name} key={controls.font.url}
+      onChange={(value) => {
+        let selectedFont = fonts.find((font) => font.name === value);
+        if (!selectedFont) selectedFont = userFonts?.find((font) => font.name === value);
+        if (selectedFont) {
+          setControls({ ...controls, font: selectedFont });
+        } else {
+          setControls({ ...controls, font: fonts[0] });
+        }
+      }}
+      options={fonts.map((font) => font.name)}
+      secondaryOptions={userFonts?.map((font) => font.name)}
+    />
+    <div>
+      <AddFontDialog
+        onUploadComplete={(name, url) => {
+          setControls({ ...controls, font: { name, url } });
+          userFonts?.push({ name, url });
+        }}
+      />
+    </div>
+  </div>
+}
+
+//=========={ Panels }==========//
+const GeneralPanel = ({ controls, setControls, setControlsDebounced, userFonts }: {
+  controls: ControlsType,
+  setControls: Dispatch<SetStateAction<ControlsType>>,
+  setControlsDebounced: (newValue: SetStateAction<ControlsType>) => void,
+  userFonts?: { name: string, url: string }[]
 }) => {
   return <PanelAccordion opened={controls.panels.general.opened}
     onPanelChange={(opened) => setControls({ ...controls, panels: { ...controls.panels, general: { opened } } })}
@@ -385,13 +415,7 @@ const GeneralPanel = ({ controls, setControls, setControlsDebounced }: {
       <Textarea className="w-full" value={controls.text} onChange={(e) => setControls({ ...controls, text: e.target.value })} />
     </InputComponent>
     <InputComponent label="Font">
-      <MultiSelect value={controls.font}
-        onChange={(value) => setControls({ ...controls, font: value })}
-        options={fonts as unknown as string[]}
-        otherOptions={
-          <AddFontDialog />
-        }
-      />
+      <FontSelectorAndUpdater controls={controls} setControls={setControls} userFonts={userFonts} />
     </InputComponent>
     <InputComponent label="Extrustion">
       <Slider min={0.1} max={10} step={0.1} defaultValue={[controls.height.value]}
@@ -696,11 +720,27 @@ const ScenePanel = ({ controls, setControls, setScenePanelOpened }: {
   </PanelAccordion>
 }
 
-//=========={ Server Side Actions Component }==========//
-const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, updateName }: {
+//=========={ Name Component }==========//
+const SceneSignUpComponent = ({ controls }: { controls: ControlsType }) => {
+  const encodedControls = useMemo(() => encodeJson(controls), [controls]);
+
+  return (
+    <div className="flex w-full">
+      <LinkButton href={"/sign-up?redirect=project?controls="+encodedControls} variant="outline" className="cu-shadow">
+        Sign up to save
+      </LinkButton>
+      {/* <Button onClick={()=>console.log(encodedControls)}>
+        Test
+      </Button> */}
+    </div>
+  );
+}
+
+const SceneNameComponent = ({ name, slug, backendLoading, controls, setBackendLoading, updateName }: {
   name?: string,
   slug?: string,
   backendLoading: boolean,
+  controls: ControlsType,
   setBackendLoading: Dispatch<SetStateAction<boolean>>,
   updateName?: (clerkId: string, slug: string, name: string) => Promise<ActionResponseType>,
 }) => {
@@ -726,13 +766,7 @@ const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, upd
   };
 
   if (!name || !slug || !user) {
-    return (
-      <div className="flex w-full">
-        <LinkButton href="/sign-in" variant="outline" className="cu-shadow">
-          Sign in
-        </LinkButton>
-      </div>
-    );
+    return <SceneSignUpComponent controls={controls} />;
   }
 
   if (editingName) {
@@ -769,7 +803,7 @@ const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, upd
         >
           {newName}
         </h1>
-        <div className="p-2">
+        <div className="p-2" title={backendLoading ? "Saving..." : "Saved"}>
           {backendLoading ? <Loader size={16} /> : <Check className="w-4 h-4 text-green-500 opacity-50" />}
         </div>
       </div>
@@ -777,7 +811,7 @@ const SceneNameComponent = ({ name, slug, backendLoading, setBackendLoading, upd
   }
 };
 
-//=========={ Client Side Actions Component }==========//
+//=========={ Scene Actions Component }==========//
 const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClickScreenShot, slug }: {
   textMeshRef: React.MutableRefObject<THREE.Mesh | null>,
   controls: ControlsType,
@@ -847,13 +881,17 @@ const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClick
 }
 
 //=========={ Main App }==========//
-const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls }: {
+const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls, userFonts }: {
   name?: string,
   updateName?: (clerkId: string, slug: string, name: string) => Promise<ActionResponseType>,
   slug?: string,
   initControls?: ControlsType
   updateControls?: (clerkId: string, slug: string, payload: ControlsType) => Promise<ActionResponseType>
+  userFonts?: { name: string, url: string }[]
 }) => {
+  //=========={ Close Sidebar }==========//
+  useCloseSiderbar();
+
   //=========={ Mixpanel }==========//
   useMixpanel("main-app", { slug });
 
@@ -879,11 +917,11 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
 
   //=========={ Geometry rerender key }==========//
   const geometryRerenderKey = useMemo(() => {
-    return controls.text + controls.height.value + controls.font + controls.curveSegments.value + controls.size.value
+    return controls.text + controls.height.value + controls.font.name + controls.curveSegments.value + controls.size.value
       + controls.bevelEnabled + controls.bevelOffset.value + controls.bevelSegments.value + controls.bevelSize.value + controls.bevelThickness.value
       + controls.lineHeight.value + controls.letterSpacing.value + controls.material
   }, [
-    controls.text, controls.font, controls.height.value, controls.curveSegments.value, controls.size.value,
+    controls.text, controls.font.name, controls.height.value, controls.curveSegments.value, controls.size.value,
     controls.bevelEnabled, controls.bevelOffset.value, controls.bevelSegments.value, controls.bevelSize.value, controls.bevelThickness.value,
     controls.lineHeight.value, controls.letterSpacing.value, controls.material
   ]);
@@ -904,7 +942,7 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
         alert(res.error);
       } else {
         setBackendLoading(false);
-        alert("An unknown error occurred. Please try again later.");
+        alert("An unknown error occurred while saving. Please try again later.");
       }
     }
   }
@@ -926,12 +964,13 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
           name={name}
           slug={slug}
           backendLoading={backendLoading}
+          controls={controls}
           setBackendLoading={setBackendLoading}
           updateName={updateName}
         />
 
         {/* //=========={ Panels }==========// */}
-        <GeneralPanel controls={controls} setControls={setControls} setControlsDebounced={setControlsDebounced} />
+        <GeneralPanel controls={controls} setControls={setControls} setControlsDebounced={setControlsDebounced} userFonts={userFonts} />
         <MaterialPanel controls={controls} setControls={setControls} setMaterialPanelOpened={setMaterialPanelOpened} material={material} />
         <BevelPanel controls={controls} setControls={setControls} setControlsDebounced={setControlsDebounced} />
         <LightPanel controls={controls} setControls={setControls} />

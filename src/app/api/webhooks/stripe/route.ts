@@ -13,10 +13,12 @@ export async function POST(req: NextRequest) {
   const payload = await req.text();
   const sig = req.headers.get("Stripe-Signature")!;
 
+  console.log(sig);
+  
   try {
     //=========={ Establish Event }==========//
-    let event = stripe.webhooks.constructEvent(payload, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-    const session = event.data.object as any;
+    const event = stripe.webhooks.constructEvent(payload, sig, process.env.STRIPE_WEBHOOK_SECRET!); // eslint-disable-line
+    const session = event.data.object as any; // eslint-disable-line
     const userId = session.metadata.userId;
     const subscriptionType = priceIdToSubscriptionType(session.items.data[0].price.id);
 

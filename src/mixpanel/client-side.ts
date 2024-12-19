@@ -5,7 +5,7 @@ import { getOperatingSystem } from "@/lib/client-helpers";
 export const sendToMixpanelClient = async (
   clerkId: string | undefined | null,
   eventName: string,
-  eventProperties?: Record<string, any>
+  eventProperties?: Record<string, any> // eslint-disable-line
 ) => {
   const additionalProperties = {
     distinct_id: clerkId,

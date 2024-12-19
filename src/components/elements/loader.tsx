@@ -1,4 +1,4 @@
-import { Dot, Loader as LuLoader } from "lucide-react";
+import { Loader as LuLoader } from "lucide-react";
 
 export default function Loader({ size = 64, tailwind = "" }) {
   return <div className="flex-1 cu-flex-center">
@@ -6,7 +6,7 @@ export default function Loader({ size = 64, tailwind = "" }) {
   </div>;
 }
 
-export const FullPageLoader = () => <Loader tailwind="text-primary-foreground dark:text-primary" />;
+export const FullPageLoader = () => <Loader tailwind="dark:text-primary" />;
 
 export const DotsLoader = () => {
   return <div className='flex justify-center items-center gap-1.5'>

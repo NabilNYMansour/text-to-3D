@@ -11,16 +11,17 @@ import { sendToMixpanelClient } from "@/mixpanel/client-side";
 import { useUploadThing } from "@/uploadthing/client-side";
 import Loader from "../elements/loader";
 
-const AddNewFont = ({ onUploadCompleteCallback }: { onUploadCompleteCallback?: () => void }) => {
+const AddNewFont = ({ onUploadCompleteCallback }: { onUploadCompleteCallback?: (name: string, url: string) => void }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fontName, setFontName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
   const { startUpload } = useUploadThing("fontUploader", {
-    onClientUploadComplete: () => {
-      sendToMixpanelClient('clerkId', 'font_added', { fontName });
+    onClientUploadComplete: (files) => {
+      const resFontName = files[0].name.replace('.json', '');
+      sendToMixpanelClient('clerkId', 'font_added', { resFontName });
       setLoading(false);
-      onUploadCompleteCallback && onUploadCompleteCallback();
+      if (onUploadCompleteCallback) onUploadCompleteCallback(resFontName, files[0].url);
     },
     onUploadError: (error: Error) => {
       alert(`${error.message}`);

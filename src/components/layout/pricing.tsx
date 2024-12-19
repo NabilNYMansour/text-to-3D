@@ -1,7 +1,7 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { use, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import SwitchText from "@/components/ui/switch-text";
 import { CircleCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -161,8 +161,6 @@ const PricingCard = ({ plan, index, yearly, subscriptionType, userId, userLoaded
             yearly={yearly}
             subscriptionType={plan.name.toLocaleLowerCase()}
             setLoading={setLoading}
-            successUrl="/"
-            cancelUrl="/pricing"
             onParentGivenClick={handleClick}
           >
             {loading ? <Loader tailwind="text-foreground" /> : buttonText}
@@ -198,7 +196,7 @@ const Pricing = ({ handleClick }: { handleClick?: () => void }) => {
       <div className="container mx-auto py-12 px-4 flex-1 bg-ora">
         <div className="text-center mb-12">
           <h1 className="font-bold text-4xl mb-4">Pricing Plans</h1>
-          <p className="text-xl text-muted-foreground mb-6">Choose the plan that's right for you</p>
+          <p className="text-xl text-muted-foreground mb-6">Choose the plan that&apos;s right for you</p>
           <SwitchText
             leftLabel="Monthly"
             rightLabel="Yearly"
