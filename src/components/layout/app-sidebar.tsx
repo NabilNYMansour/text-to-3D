@@ -15,10 +15,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Box, FileType, Home, LogIn, MessageSquare, ScrollText, Settings } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { FullPageLoader } from "../elements/loader";
 import SubscriptionButtonDialog from "../buttons/subscription-button-dialog";
 import Image from "next/image";
 import { useEffect } from "react";
+import { Skeleton } from "../ui/skeleton";
 
 const data = {
   navMain: [
@@ -103,6 +103,18 @@ const data = {
   ],
 }
 
+const SidebarSkeleton = () => {
+  return <>
+    <SidebarGroup>
+      <Skeleton className="h-32 w-full bg-muted" />
+    </SidebarGroup>
+
+    <SidebarGroup>
+      <Skeleton className="h-32 w-full bg-muted" />
+    </SidebarGroup>
+  </>
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { isSignedIn, isLoaded, user } = useUser();
@@ -147,7 +159,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )) : <FullPageLoader />}
+        )) : <SidebarSkeleton />}
       </SidebarContent>
     </Sidebar>
   )

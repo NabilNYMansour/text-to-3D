@@ -10,16 +10,18 @@ import { captureException } from "@sentry/nextjs";
 import { sendToMixpanelClient } from "@/mixpanel/client-side";
 import { useUploadThing } from "@/uploadthing/client-side";
 import Loader from "../elements/loader";
+import { useUser } from "@clerk/nextjs";
 
 const AddNewFont = ({ onUploadCompleteCallback }: { onUploadCompleteCallback?: (name: string, url: string) => void }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [fontName, setFontName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const { user } = useUser();
 
   const { startUpload } = useUploadThing("fontUploader", {
     onClientUploadComplete: (files) => {
       const resFontName = files[0].name.replace('.json', '');
-      sendToMixpanelClient('clerkId', 'font_added', { resFontName });
+      sendToMixpanelClient(user?.id, 'font_added', { resFontName });
       setLoading(false);
       if (onUploadCompleteCallback) onUploadCompleteCallback(resFontName, files[0].url);
     },
@@ -34,7 +36,6 @@ const AddNewFont = ({ onUploadCompleteCallback }: { onUploadCompleteCallback?: (
     setUploadedFile(file)
     setFontName(file?.name.split('.')[0] || '');
   }
-
   const handleFileUpload = async () => {
     if (uploadedFile && fontName) {
       setLoading(true);

@@ -19,10 +19,10 @@ export const ourFileRouter = {
       if (!subscriptionQuery || subscriptionQuery.length === 0) {
         throw new UploadThingError("Unauthorized");
       }
-      // const subscriptionType = subscriptionQuery[0].subscriptionType;
-      // if (subscriptionType === "free") {
-      //   throw new UploadThingError("Unauthorized");
-      // }
+      const subscriptionType = subscriptionQuery[0].subscriptionType;
+      if (subscriptionType === "free") {
+        throw new UploadThingError("Unauthorized");
+      }
       const file = files[0];
       const fonts = await getFontsByClerkId(user.id);
       const fontsNames = fonts.map((font) => font.name);

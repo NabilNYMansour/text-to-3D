@@ -165,7 +165,7 @@ const ProjectCard = ({ project, deleteProject, updateName }: {
 const NoProjects = () => {
   const router = useRouter();
 
-  return <div className='cu-flex-center flex-col gap-2 mt-8 p-2 h-full text-center'>
+  return <div className='cu-flex-center flex-col gap-2 p-2 h-full text-center'>
     <h2 className="text-lg font-semibold">No projects found</h2>
     <p className="text-sm text-muted-foreground">Create a new project to get started</p>
     <Button onClick={() => router.push('/project')} variant="outline" className='cu-shadow'>

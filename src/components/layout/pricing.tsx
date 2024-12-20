@@ -36,7 +36,6 @@ const pricingPlans: PricingPlan[] = [
     features: [
       "Unlimited projects",
       "2k and 4k screenshots",
-      "Up to five 3D model downloads",
       "Personal use",
     ],
     everythingInPreviousText: "",
@@ -52,7 +51,7 @@ const pricingPlans: PricingPlan[] = [
     yearlyPrice: 30,
     features: [
       "8k screenshots",
-      "Unlimited 3D model downloads",
+      "3D model downloads",
       "Custom fonts upload",
       "Commercial use",
     ],
@@ -185,9 +184,7 @@ const Pricing = ({ handleClick }: { handleClick?: () => void }) => {
   const [yearly, setYearly] = useState(true);
   const [loading, setLoading] = useState(false);
   const user = useUser();
-
-  const subscriptionType = user.user ? user.user.publicMetadata.subscriptionType as string : null;
-  const userId = user.user ? user.user.id : null;
+  const subscriptionType = useMemo(() => user.user ? user.user.publicMetadata.subscriptionType as string : null, [user]);
 
   useMixpanel("pricing-page", { currentSubscriptionType: subscriptionType });
 
@@ -212,7 +209,7 @@ const Pricing = ({ handleClick }: { handleClick?: () => void }) => {
                 plan={plan}
                 yearly={yearly}
                 subscriptionType={subscriptionType}
-                userId={userId}
+                userId={user.user ? user.user.id : null}
                 userLoaded={user.isLoaded}
                 loading={loading}
                 setLoading={setLoading}

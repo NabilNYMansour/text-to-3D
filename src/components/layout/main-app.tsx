@@ -43,7 +43,7 @@ import { useDebouncedState } from "@mantine/hooks";
 import { sendToMixpanelClient } from "@/mixpanel/client-side";
 import { captureException } from "@sentry/nextjs";
 import AddFontDialog from "../elements/add-font-dialog";
-import { useSearchParams } from "next/navigation";
+import NotSubscribed from "./not-subscribed";
 
 //=========={ Export }==========//
 function saveArrayBuffer(buffer: ArrayBuffer, fileName: string) {
@@ -726,7 +726,7 @@ const SceneSignUpComponent = ({ controls }: { controls: ControlsType }) => {
 
   return (
     <div className="flex w-full">
-      <LinkButton href={"/sign-up?redirect=project?controls="+encodedControls} variant="outline" className="cu-shadow">
+      <LinkButton href={"/sign-up?redirect=project?controls=" + encodedControls} variant="outline" className="cu-shadow">
         Sign up to save
       </LinkButton>
       {/* <Button onClick={()=>console.log(encodedControls)}>
@@ -812,12 +812,13 @@ const SceneNameComponent = ({ name, slug, backendLoading, controls, setBackendLo
 };
 
 //=========={ Scene Actions Component }==========//
-const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClickScreenShot, slug }: {
+const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClickScreenShot, slug, isProMember }: {
   textMeshRef: React.MutableRefObject<THREE.Mesh | null>,
   controls: ControlsType,
   setScreenshotResolution: Dispatch<SetStateAction<{ width: number, height: number }>>,
   setClickScreenShot: Dispatch<SetStateAction<boolean>>,
-  slug?: string
+  isProMember: boolean
+  slug?: string,
 }) => {
   const { user } = useClerk();
 
@@ -850,43 +851,45 @@ const SceneActions = ({ textMeshRef, controls, setScreenshotResolution, setClick
           <div>3840 x 2160</div>
         </Button>
 
-        <Button className="grid grid-cols-2 w-full" size="lg"
-          onClick={() => {
-            setScreenshotResolution({ width: 7680, height: 4320 });
-            setClickScreenShot(true);
-          }}
-        >
-          <div className="flex">PNG 8K</div>
-          <div>7680 x 4320</div>
-        </Button>
+        {isProMember ? <>
+          <Button className="grid grid-cols-2 w-full" size="lg"
+            onClick={() => {
+              setScreenshotResolution({ width: 7680, height: 4320 });
+              setClickScreenShot(true);
+            }}
+          >
+            <div className="flex">PNG 8K</div>
+            <div>7680 x 4320</div>
+          </Button>
 
-        <h1 className="flex items-center gap-1 mt-2"><Box className="w-4 h-4" /> 3D Model</h1>
-        <Button onClick={() => {
-          getGLTF(textMeshRef, controls);
-          sendToMixpanelClient(user?.id, "download-gltf", { slug });
-        }}>
-          Download GLTF
-        </Button>
+          <h1 className="flex items-center gap-1 mt-2"><Box className="w-4 h-4" /> 3D Model</h1>
+          <Button onClick={() => {
+            getGLTF(textMeshRef, controls);
+            sendToMixpanelClient(user?.id, "download-gltf", { slug });
+          }}>
+            Download GLTF
+          </Button>
 
-        <Button onClick={() => {
-          getSTL(textMeshRef, controls);
-          sendToMixpanelClient(user?.id, "download-stl", { slug });
-        }}>
-          Download STL
-        </Button>
-
+          <Button onClick={() => {
+            getSTL(textMeshRef, controls);
+            sendToMixpanelClient(user?.id, "download-stl", { slug });
+          }}>
+            Download STL
+          </Button>
+        </> : <NotSubscribed title="Export as 3D Model?" />}
       </PopoverContent>
     </Popover>
   </div>
 }
 
 //=========={ Main App }==========//
-const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls, userFonts }: {
+const MainApp = ({ name, updateName, slug, initControls = defaultControls, updateControls, isProMember, userFonts }: {
   name?: string,
   updateName?: (clerkId: string, slug: string, name: string) => Promise<ActionResponseType>,
   slug?: string,
   initControls?: ControlsType
   updateControls?: (clerkId: string, slug: string, payload: ControlsType) => Promise<ActionResponseType>
+  isProMember: boolean,
   userFonts?: { name: string, url: string }[]
 }) => {
   //=========={ Close Sidebar }==========//
@@ -948,12 +951,8 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
   }
 
   //=========={ Server Side Actions Effects }==========//
-  useEffect(() => {
-    setCheckSaveControls(debouncedControls);
-  }, [debouncedControls]);
-  useEffect(() => {
-    handleControlsSave();
-  }, [checkSaveControls]);
+  useEffect(() => setCheckSaveControls(debouncedControls), [debouncedControls]);
+  useEffect(() => { handleControlsSave() }, [checkSaveControls]);
 
   //=========={ Render }==========//
   return (
@@ -985,6 +984,7 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
             controls={controls}
             setScreenshotResolution={setScreenshotResolution}
             setClickScreenShot={setClickScreenShot}
+            isProMember={isProMember}
             slug={slug}
           />
           <TextTo3D controls={controls} clickScreenShot={clickScreenShot} setClickScreenShot={setClickScreenShot}

@@ -16,7 +16,7 @@ const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
   if (searchParams.controls) controls = decodeJson(String(controlsParam));
 
   const user = await currentUser();
-  if (!user) return <MainApp initControls={controls} />;
+  if (!user) return <MainApp isProMember={false} initControls={controls} />;
 
   const isSynced = await isUserSyncedWithDB();
   if (!isSynced) return <UserBeingProcessed />;

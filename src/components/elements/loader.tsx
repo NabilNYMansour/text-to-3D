@@ -1,8 +1,8 @@
-import { Loader as LuLoader } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 export default function Loader({ size = 64, tailwind = "" }) {
   return <div className="flex-1 cu-flex-center">
-    <LuLoader className={"animate-spin " + tailwind} size={size} />
+    <LoaderCircle className={"animate-spin " + tailwind} size={size} />
   </div>;
 }
 

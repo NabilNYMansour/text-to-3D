@@ -10,7 +10,8 @@
     "ngrok": "ngrok http http://localhost:3000",
     "tmole": "tmole 3000",
     "seed": "npx ts-node ./scripts/seed-db.ts",
-    "db-push": "npx drizzle-kit push"
+    "db-push": "npx drizzle-kit push",
+    "build-start": "npm run build && npm run start"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.5.0",
