@@ -132,7 +132,11 @@ const ProjectCard = ({ project, deleteProject, updateName }: {
   return (
     <div
       key={project.slug}
-      className={cn("relative cursor-pointer transition-colors flex flex-col gap-1 border p-2 pt-1 rounded-md w-[325px] h-[210px] overflow-hidden", isHovered && 'bg-muted')}
+      className={cn("relative cursor-pointer transition-colors flex flex-col gap-1 border p-2 pt-1 rounded-md w-[325px] h-[210px] overflow-hidden",
+        isHovered && 'bg-muted',
+        "transition-all duration-300 ease-out",
+        "hover:translate-y-[-4px]",
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => setIsHovered(true)}
@@ -232,14 +236,15 @@ const Pagination = ({ currentPage, pageSize, projectsCount }: {
   );
 }
 
-const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName, projectsCount, currentPage, pageSize }: {
+const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName, projectsCount, currentPage, pageSize, showAllProjects = true }: {
   projects: { slug: string, name: string, payload: ControlsType }[],
   latestProjects: { slug: string, name: string, payload: ControlsType }[],
   deleteProject: (clerkId: string, slug: string) => Promise<ActionResponseType>,
   updateProjectName: (clerkId: string, slug: string, name: string) => Promise<ActionResponseType>,
   projectsCount: number,
   currentPage: number,
-  pageSize: number
+  pageSize: number,
+  showAllProjects?: boolean
 }) => {
   const router = useRouter();
   const params = useSearchParams();
@@ -278,10 +283,13 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
   }
 
   return (
-    <div className="w-full max-w-5xl h-full flex flex-col items-center gap-2 p-4">
+    <div className="w-full max-w-5xl flex flex-col items-center gap-2">
       {latestProjects.length > 0 && <>
         <h1 className="text-xl font-bold w-full">Recent</h1>
-        <div className="w-full flex flex-wrap gap-2 select-none justify-center sm:justify-normal">
+        <div className={cn("w-full flex flex-wrap justify-center gap-2 select-none",
+          latestProjects.length < 3 && "justify-start"
+        )}
+        >
           {latestProjects.map((project) => <ProjectCard
             key={project.slug}
             project={project}
@@ -290,36 +298,40 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
           />)}
         </div>
       </>}
-
       <Separator className='mt-2' />
 
-      <div className='w-full flex items-center gap-2'>
-        <h1 className="text-xl font-bold">All Projects</h1>
-        <Button onClick={() => router.push('/project')} size="icon" variant="outline" className='cu-shadow'>
-          <CirclePlus />
-        </Button>
-      </div>
-      <Input type="search" placeholder="Search projects" className="w-full"
-        defaultValue={params.get('search') ?? ""}
-        onChange={handleSearch}
-      />
-      {projects.length === 0 ?
-        projectsCount !== 0 ?
-          <div className='h-10 cu-flex-center'>
-            <DotsLoader />
-          </div> : <div>
-            No projects found
-          </div> : <>
-          <div className="w-full flex flex-wrap gap-2 select-none justify-center sm:justify-normal">
-            {projects.map((project) => <ProjectCard
-              key={project.slug}
-              project={project}
-              deleteProject={deleteProject}
-              updateName={updateProjectName}
-            />)}
-          </div>
-          <Pagination currentPage={currentPage} pageSize={pageSize} projectsCount={projectsCount} />
-        </>}
+      {showAllProjects && <>
+        <div className='w-full flex items-center gap-2'>
+          <h1 className="text-xl font-bold">All Projects</h1>
+          <Button onClick={() => router.push('/project')} size="icon" variant="outline" className='cu-shadow'>
+            <CirclePlus />
+          </Button>
+        </div>
+        <Input type="search" placeholder="Search projects" className="w-full"
+          defaultValue={params.get('search') ?? ""}
+          onChange={handleSearch}
+        />
+        {projects.length === 0 ?
+          projectsCount !== 0 ?
+            <div className='h-10 cu-flex-center'>
+              <DotsLoader />
+            </div> : <div>
+              No projects found
+            </div> : <>
+            <div className={cn("w-full flex flex-wrap justify-center gap-2 select-none",
+              projects.length < 3 && "justify-start"
+            )}
+            >
+              {projects.map((project) => <ProjectCard
+                key={project.slug}
+                project={project}
+                deleteProject={deleteProject}
+                updateName={updateProjectName}
+              />)}
+            </div>
+            <Pagination currentPage={currentPage} pageSize={pageSize} projectsCount={projectsCount} />
+          </>}
+      </>}
     </div>
   );
 };

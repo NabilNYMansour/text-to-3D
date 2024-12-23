@@ -263,7 +263,6 @@ export const CheckFont = async (clerkId: string, slug: string, payload: Controls
     }
   } catch (error) {
     captureException(error);
-    console.log(error);
     await db.deleteFontByUrl(clerkId, payload.font.url);
     payload.font = fonts[0];
     UpdateControls(clerkId, slug, payload);

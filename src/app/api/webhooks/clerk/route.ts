@@ -58,7 +58,12 @@ export async function POST(req: Request) {
       const name = (evt.data as UserJSON).first_name + ' ' + (evt.data as UserJSON).last_name;
       const clerk = await clerkClient();
       await createUser({ name: name, clerkId: clerkId, createAt: new Date().toISOString() });
-      await clerk.users.updateUserMetadata(clerkId, { publicMetadata: { subscriptionType: "free" } }); // Set the default subscription type to free
+      await clerk.users.updateUserMetadata(clerkId,
+        {
+          publicMetadata: { subscriptionType: "free" }, // Set the default subscription type to free
+          unsafeMetadata: { sidebarOpen: true } // Set the default sidebar open to true
+        }
+      );
       sendToMixpanelServer(clerkId, 'user-created', { name: name });
       break;
 

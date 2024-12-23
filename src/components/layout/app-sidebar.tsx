@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Box, FileType, Home, LogIn, MessageSquare, ScrollText, Settings } from "lucide-react";
+import { Box, FileType, Home, LogIn, MessageSquare, ScrollText, Settings, Theater } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import SubscriptionButtonDialog from "../buttons/subscription-button-dialog";
 import Image from "next/image";
@@ -97,6 +97,13 @@ const data = {
           icon: <MessageSquare />,
           showSignedIn: true,
           showSignedOut: true,
+        },
+        {
+          title: "Landing",
+          url: "/landing",
+          icon: <Theater />,
+          showSignedIn: true,
+          showSignedOut: false,
         },
       ],
     }

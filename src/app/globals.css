@@ -69,6 +69,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -78,7 +79,7 @@
   }
 
   ::-webkit-scrollbar {
-    @apply w-2 h-2;
+    @apply w-2 h-2 bg-background;
   }
 
   ::-webkit-scrollbar-track {

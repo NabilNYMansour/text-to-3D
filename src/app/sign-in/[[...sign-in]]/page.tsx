@@ -17,6 +17,8 @@ function Page() {
   useMixpanel("sign-in", { redirectUrl });
 
   return <div className="flex-1 cu-flex-center p-4">
+    <div className="pointer-events-none fixed inset-0 z-[0] bg-[linear-gradient(to_right,#6b7280_1px,transparent_1px),linear-gradient(to_bottom,#6b7280_1px,transparent_1px)] bg-[size:24px_24px] opacity-20" />
+
     <SignIn
       signUpUrl={"/sign-up"}
       forceRedirectUrl={"/" + (redirectUrl ? redirectUrl : "")}
@@ -27,7 +29,8 @@ function Page() {
           cardBox: "border-2 border-muted",
           formFieldInput: "bg-background",
         }
-      }} />
+      }}
+    />
   </div >
 }
 

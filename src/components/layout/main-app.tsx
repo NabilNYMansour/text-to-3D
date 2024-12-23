@@ -69,10 +69,10 @@ function exportGLTF(scene: THREE.Scene) {
   gltfExporter.parse(
     scene, (result) => {
       if (result instanceof ArrayBuffer) {
-        saveArrayBuffer(result, 'textTo3D.glb');
+        saveArrayBuffer(result, 'TextTo3D.glb');
       } else {
         const output = JSON.stringify(result, null, 2);
-        saveString(output, 'textTo3D.gltf');
+        saveString(output, 'TextTo3D.gltf');
       }
     }, (error) => {
       alert('An error happened during parsing');
@@ -96,7 +96,7 @@ function exportSTL(scene: THREE.Scene) {
   const stlExporter = new STLExporter();
 
   const binaryData = stlExporter.parse(scene, { binary: true });
-  saveArrayBuffer(binaryData.buffer as ArrayBuffer, 'model.stl');
+  saveArrayBuffer(binaryData.buffer as ArrayBuffer, 'TextTo3D.stl');
 }
 const getSTL = (textMeshRef: React.MutableRefObject<THREE.Mesh | null>, controls: ControlsType) => {
   if (!textMeshRef.current) return;
@@ -290,6 +290,9 @@ export const TextTo3D = ({
   zoom = 1,
   className,
   slug,
+  enableZoom = true,
+  enablePan = true,
+  autoRotate = false,
 }: {
   controls: ControlsType,
   clickScreenShot?: boolean,
@@ -302,7 +305,10 @@ export const TextTo3D = ({
   orbitControlsEnabled?: boolean,
   zoom?: number,
   className?: string
-  slug?: string
+  slug?: string,
+  enableZoom?: boolean,
+  enablePan?: boolean,
+  autoRotate?: boolean,
 }) => {
 
   const materialComponent = useMemo(() => {
@@ -326,7 +332,7 @@ export const TextTo3D = ({
   return <Canvas shadows
     className={cn("rounded-md bg-background transition-opacity duration-300", className)}
     gl={{ preserveDrawingBuffer: true }}
-    camera={controls.perspective ? { zoom: 1 } : { zoom: zoom * 100, near: -1000, far: 1000, position: [-0.5, 0.2, 1] }}
+    camera={controls.perspective ? { zoom: 0.9 } : { zoom: zoom * 100, near: -1000, far: 1000, position: [-0.5, 0.2, 1] }}
     orthographic={!controls.perspective}
     key={controls.perspective ? "perspective" : "orthographic"}
     style={{ opacity: clickScreenShot ? 0 : 1 }}
@@ -362,7 +368,13 @@ export const TextTo3D = ({
     />}
 
     {/* //=========={ Orbit Controls }==========// */}
-    {orbitControlsEnabled && <OrbitControls makeDefault />}
+    {orbitControlsEnabled && <OrbitControls
+      makeDefault 
+      enableZoom={enableZoom} 
+      enablePan={enablePan} 
+      autoRotate={autoRotate}
+      autoRotateSpeed={0.15}
+      />}
   </Canvas>
 }
 const FontSelectorAndUpdater = ({ controls, setControls, userFonts }: {
@@ -725,17 +737,19 @@ const SceneSignUpComponent = ({ controls }: { controls: ControlsType }) => {
   const encodedControls = useMemo(() => encodeJson(controls), [controls]);
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full justify-between">
       <LinkButton href={"/sign-up?redirect=project?controls=" + encodedControls} variant="outline" className="cu-shadow">
         Sign up to save
       </LinkButton>
-      {/* <Button onClick={()=>console.log(encodedControls)}>
-        Test
+      {/* <Button onClick={()=>{
+        console.log(encodedControls);
+        console.log(JSON.stringify(controls, null, 2));
+      }}>
+        Export json
       </Button> */}
     </div>
   );
 }
-
 const SceneNameComponent = ({ name, slug, backendLoading, controls, setBackendLoading, updateName }: {
   name?: string,
   slug?: string,
@@ -945,7 +959,7 @@ const MainApp = ({ name, updateName, slug, initControls = defaultControls, updat
         alert(res.error);
       } else {
         setBackendLoading(false);
-        alert("An unknown error occurred while saving. Please try again later.");
+        // alert("An unknown error occurred while saving. Please try again later.");
       }
     }
   }

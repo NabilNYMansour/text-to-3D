@@ -17,7 +17,9 @@ export const sendToMixpanelServer = async (
   };
 
   try {
-    mixpanel.track(eventName, properties);
+    if (process.env.NODE_ENV === 'production') {
+      mixpanel.track(eventName, properties);
+    }
   } catch (error) {
     captureException(error);
   }

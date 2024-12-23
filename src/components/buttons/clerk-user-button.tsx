@@ -15,13 +15,13 @@ const ClerkUserButton = () => {
   const { currentTheme } = useToggleTheme();
 
   return (
-    <div>
+    <div className="h-[28px] w-[28px]">
       <ClerkLoading>
         <ClerkSkeleton />
       </ClerkLoading>
       <ClerkLoaded>
         <SignedOut>
-          <div className="h-[28px] w-[28px] hover:outline rounded-full outline-muted outline-4">
+          <div className="h-[28px] w-[28px] hover:outline rounded-full outline-muted outline-4 transition-all duration-75">
             <Link href="/sign-in">
               <button className="h-[28px] w-[28px] rounded-full bg-muted opacity-70 hover:opacity-100 cu-flex-center">
                 <LogIn className="h-3 -translate-x-[1px]" />

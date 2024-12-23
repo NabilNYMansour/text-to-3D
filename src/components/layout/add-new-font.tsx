@@ -20,10 +20,11 @@ const AddNewFont = ({ onUploadCompleteCallback }: { onUploadCompleteCallback?: (
 
   const { startUpload } = useUploadThing("fontUploader", {
     onClientUploadComplete: (files) => {
-      const resFontName = files[0].name.replace('.json', '');
-      sendToMixpanelClient(user?.id, 'font_added', { resFontName });
+      const fontname = files[0].name.replace('.json', '');
+      const fonturl = files[0].url;
+      sendToMixpanelClient(user?.id, 'font-added', { "font-name": fontname, "font-url": fonturl });
       setLoading(false);
-      if (onUploadCompleteCallback) onUploadCompleteCallback(resFontName, files[0].url);
+      if (onUploadCompleteCallback) onUploadCompleteCallback(fontname, fonturl);
     },
     onUploadError: (error: Error) => {
       alert(`${error.message}`);

@@ -1,10 +1,9 @@
-import type { Metadata } from "next";
 import "./globals.css";
+import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider"
 import { ClerkProvider } from '@clerk/nextjs'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import ClerkUserButton from "@/components/buttons/clerk-user-button";
 import { ThemeToggle } from "@/components/buttons/theme-toggle";
 import HeaderActions from "@/components/elements/header-actions";
 import { currentUser } from "@clerk/nextjs/server";
@@ -19,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await currentUser();
-  const sidebarOpen = user ? user.unsafeMetadata.sidebarOpen as boolean : true;
+  const sidebarOpen = user ? user.unsafeMetadata.sidebarOpen as boolean : false;
 
   return (
     <html lang="en">
@@ -27,20 +26,17 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <ClerkProvider afterSignOutUrl="/sign-in">
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme="dark"
             enableSystem
             disableTransitionOnChange
           >
             <SidebarProvider defaultOpen={sidebarOpen}>
               <AppSidebar />
               <SidebarInset className="overflow-hidden">
-                <header className="flex items-center justify-between gap-2 p-2">
+                <header className="flex items-center justify-between gap-2 p-2 z-[1] bg-gradient-to-b from-background/80">
                   <SidebarTrigger title="Toggle Sidebar" />
                   <ThemeToggle variant="ghost" />
-                  <div className="flex-1 flex justify-end items-center gap-2">
-                    <HeaderActions />
-                    <div><ClerkUserButton /></div>
-                  </div>
+                  <HeaderActions />
                 </header>
                 <div className="flex flex-1 flex-col items-center">
                   {children}

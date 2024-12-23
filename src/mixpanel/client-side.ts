@@ -26,14 +26,16 @@ export const sendToMixpanelClient = async (
     ...additionalProperties,
   };
 
-  fetch("/api/mixpanel", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      event: eventName,
-      properties: properties,
-    }),
-  });
+  if (process.env.NODE_ENV === 'production') {
+    fetch("/api/mixpanel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        event: eventName,
+        properties: properties,
+      }),
+    });
+  }
 };

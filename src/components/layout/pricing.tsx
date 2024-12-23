@@ -36,7 +36,6 @@ const pricingPlans: PricingPlan[] = [
     features: [
       "Unlimited projects",
       "2k and 4k screenshots",
-      "Personal use",
     ],
     everythingInPreviousText: "",
     saveBadgeTailwind: "",
@@ -53,7 +52,6 @@ const pricingPlans: PricingPlan[] = [
       "8k screenshots",
       "3D model downloads",
       "Custom fonts upload",
-      "Commercial use",
     ],
     everythingInPreviousText: "Everything in Free, plus:",
     saveBadgeTailwind: "bg-muted ",

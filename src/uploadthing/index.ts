@@ -5,7 +5,7 @@ import { UploadThingError } from "uploadthing/server";
 
 const f = createUploadthing();
 
-export const ourFileRouter = {
+export const fontRouter = {
   fontUploader: f({
     blob: {
       maxFileSize: "64MB",
@@ -37,4 +37,4 @@ export const ourFileRouter = {
     })
 } satisfies FileRouter;
 
-export type OurFileRouter = typeof ourFileRouter;
+export type FontRouter = typeof fontRouter;
