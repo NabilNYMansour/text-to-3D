@@ -15,8 +15,8 @@ import { ArrowBigRight, CirclePlus, Download, FileType, Wrench } from "lucide-re
 import Link from "next/link";
 import MyProjects from "./my-projects";
 import { Skeleton } from "../ui/skeleton";
-import { defaultTemplate, gradientTemplate, perspectiveTemplate } from "@/lib/project-templates";
 import { useSidebar } from "../ui/sidebar";
+import { defaultTemplate, gradientTemplate, perspectiveTemplate } from "@/lib/project-templates";
 
 const DescriptionCard = ({ title, description, icon }: {
   title: string,
