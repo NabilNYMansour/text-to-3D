@@ -347,7 +347,7 @@ export const TextTo3D = ({
       />}
 
     {/* //=========={ Background }==========// */}
-    <SceneBackground controls={controls} key={controls.background} />
+    {controls.background !== "Transparent" && <SceneBackground controls={controls} key={controls.background} />}
 
     {/* //=========={ Scene Objects }==========// */}
     <SceneObjects key={geometryRerenderKey} controls={controls} textMeshRef={textMeshRef} materialComponent={materialComponent} />
@@ -356,7 +356,6 @@ export const TextTo3D = ({
     <Environment
       key={controls.preset}
       preset={controls.preset.toLowerCase() as EnvironmentProps["preset"]}
-      extensions={(loader: any) => loader.setDataType(THREE.FloatType)} // eslint-disable-line
       background={controls.background === "Environment" && controls.perspective}
     />
     {controls.lightEnabled && <directionalLight castShadow
@@ -369,12 +368,12 @@ export const TextTo3D = ({
 
     {/* //=========={ Orbit Controls }==========// */}
     {orbitControlsEnabled && <OrbitControls
-      makeDefault 
-      enableZoom={enableZoom} 
-      enablePan={enablePan} 
+      makeDefault
+      enableZoom={enableZoom}
+      enablePan={enablePan}
       autoRotate={autoRotate}
       autoRotateSpeed={0.15}
-      />}
+    />}
   </Canvas>
 }
 const FontSelectorAndUpdater = ({ controls, setControls, userFonts }: {

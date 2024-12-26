@@ -1,6 +1,6 @@
-const { config } = require("dotenv");
-const { drizzle } = require('drizzle-orm/neon-http');
+// const { config } = require("dotenv");
+// const { drizzle } = require('drizzle-orm/neon-http');
 
-config({ path: ".env.local" });
+// config({ path: ".env.local" });
 
-const db = drizzle(process.env.DATABASE_URL!);
+// const db = drizzle(process.env.DATABASE_URL!);

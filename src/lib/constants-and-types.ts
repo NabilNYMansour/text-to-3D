@@ -12,8 +12,6 @@ export const fonts = [
   { name: "Inter", url: "/Inter.json" },
   { name: "Rubik", url: "/Rubik.json" },
   { name: "Caviar Dreams", url: "/CaviarDreams.json" },
-  { name: "Amiri", url: "/Amiri.json" },
-  { name: "Noto", url: "/Noto.json" }
 ];
 
 export const defaultControls = {
@@ -71,3 +69,74 @@ export type ControlsType = typeof defaultControls;
 export type SearchParams = { [key: string]: string | string[] | undefined };
 
 export type ActionResponseType = { error: string; success?: undefined; } | { success: boolean; error?: undefined; };
+
+export function compressControls(controls: ControlsType): string {
+  const valuesOnly = {
+    text: controls.text,
+    font: controls.font,
+    height: controls.height.value,
+    curveSegments: controls.curveSegments.value,
+    size: controls.size.value,
+    bevelEnabled: controls.bevelEnabled,
+    bevelOffset: controls.bevelOffset.value,
+    bevelSegments: controls.bevelSegments.value,
+    bevelSize: controls.bevelSize.value,
+    bevelThickness: controls.bevelThickness.value,
+    lineHeight: controls.lineHeight.value,
+    letterSpacing: controls.letterSpacing.value,
+    material: controls.material,
+    colorOnly: controls.colorOnly,
+    color: controls.color,
+    secondColor: controls.secondColor,
+    roughness: controls.roughness.value,
+    metalness: controls.metalness.value,
+    perspective: controls.perspective,
+    preset: controls.preset,
+    background: controls.background,
+    backgroundColor: controls.backgroundColor,
+    secondBackgroundColor: controls.secondBackgroundColor,
+    gradientAngle: controls.gradientAngle.value,
+    backdropEnabled: controls.backdropEnabled,
+    backdropColor: controls.backdropColor,
+    backdropRoughness: controls.backdropRoughness.value,
+    backdropMetalness: controls.backdropMetalness.value,
+    lightEnabled: controls.lightEnabled,
+    light: {
+      intensity: controls.light.intensity,
+      color: controls.light.color,
+      position: controls.light.position
+    },
+    enableVerticalShadow: controls.enableVerticalShadow,
+    verticalShadowOffset: controls.verticalShadowOffset.value,
+    panels: controls.panels
+  };
+  return btoa(JSON.stringify(valuesOnly));
+}
+
+export function decompressControls(compressed: string): ControlsType {
+  const jsonString = atob(compressed);
+  if (!jsonString) {
+    throw new Error("Failed to decompress controls");
+  }
+  const valuesOnly = JSON.parse(jsonString);
+
+  return {
+    ...defaultControls,
+    ...valuesOnly,
+    height: { ...defaultControls.height, value: valuesOnly.height },
+    curveSegments: { ...defaultControls.curveSegments, value: valuesOnly.curveSegments },
+    size: { ...defaultControls.size, value: valuesOnly.size },
+    bevelOffset: { ...defaultControls.bevelOffset, value: valuesOnly.bevelOffset },
+    bevelSegments: { ...defaultControls.bevelSegments, value: valuesOnly.bevelSegments },
+    bevelSize: { ...defaultControls.bevelSize, value: valuesOnly.bevelSize },
+    bevelThickness: { ...defaultControls.bevelThickness, value: valuesOnly.bevelThickness },
+    lineHeight: { ...defaultControls.lineHeight, value: valuesOnly.lineHeight },
+    letterSpacing: { ...defaultControls.letterSpacing, value: valuesOnly.letterSpacing },
+    roughness: { ...defaultControls.roughness, value: valuesOnly.roughness },
+    metalness: { ...defaultControls.metalness, value: valuesOnly.metalness },
+    gradientAngle: { ...defaultControls.gradientAngle, value: valuesOnly.gradientAngle },
+    backdropRoughness: { ...defaultControls.backdropRoughness, value: valuesOnly.backdropRoughness },
+    backdropMetalness: { ...defaultControls.backdropMetalness, value: valuesOnly.backdropMetalness },
+    verticalShadowOffset: { ...defaultControls.verticalShadowOffset, value: valuesOnly.verticalShadowOffset }
+  };
+}

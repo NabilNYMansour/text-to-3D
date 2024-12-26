@@ -19,7 +19,7 @@ const AddFontDialog = ({ onUploadComplete, withButtonText }:
 ) => {
   const [open, setOpen] = useState(false);
   const { user } = useUser();
-  const isFreeMember = useMemo(() => user?.publicMetadata?.subscriptionType === 'free', [user]);
+  const isFreeMember = useMemo(() => user?.publicMetadata?.subscriptionType === 'free' || !user, [user]);
 
   return <Dialog open={open} onOpenChange={setOpen}>
     <DialogTrigger asChild>
@@ -38,7 +38,8 @@ const AddFontDialog = ({ onUploadComplete, withButtonText }:
         <AddNewFont onUploadCompleteCallback={(name, url) => {
           if (onUploadComplete) onUploadComplete(name, url);
           setOpen(false);
-        }} />}
+        }}
+        />}
     </DialogContent>
   </Dialog>
 };

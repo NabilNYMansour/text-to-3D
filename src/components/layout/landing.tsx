@@ -228,6 +228,9 @@ const TemplateCard = ({ controls }: { controls: ControlsType }) => {
       "hover:translate-y-[-4px] hover:bg-primary hover:border-primary")}
     onClick={() => sidebar.setOpen(false)}
   >
+    <div className="absolute z-[1] m-1 p-1 bg-primary rounded-md text-primary-foreground">
+      <CirclePlus />
+    </div>
     <Suspense fallback={<Skeleton className="w-full h-full bg-muted" />}>
       <TextTo3D
         controls={controls}

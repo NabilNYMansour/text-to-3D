@@ -6,6 +6,7 @@ import React from 'react';
 import * as db from '@/db/crud';
 import { unstable_noStore as noStore } from 'next/cache';
 import { CheckFont, IsProMember, UpdateControls, UpdateName } from '@/lib/server-actions';
+import { decompressControls } from '@/lib/constants-and-types';
 
 const Page = async ({ params }: { params: { slug: string } }) => {
   noStore();
@@ -18,7 +19,7 @@ const Page = async ({ params }: { params: { slug: string } }) => {
   const user = await currentUser();
   if (!user || user.id !== clerkId) return notFound();
 
-  const payload = project[0].payload;
+  const payload = decompressControls(project[0].controls);
   const name = project[0].name;
 
   await db.updateLastOpenedAtBySlug(slug);

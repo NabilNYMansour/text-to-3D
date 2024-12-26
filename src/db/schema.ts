@@ -1,5 +1,4 @@
-import { ControlsType, defaultControls } from "@/lib/constants-and-types";
-import { date, integer, pgEnum, pgTable, varchar, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { date, integer, pgEnum, pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
 
 export const subscriptionEnum = pgEnum('subscription_enum', ['free', 'pro']);
 export const usersTable = pgTable("users", {
@@ -18,7 +17,7 @@ export const projectsTable = pgTable("projects", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   clerkId: varchar({ length: 255 }).notNull().references(() => usersTable.clerkId),
   name: varchar({ length: 255 }).notNull(),
-  payload: jsonb().$type<ControlsType>().notNull().default(defaultControls),
+  controls: varchar({ length: 2550 }).notNull(),
   slug: varchar({ length: 255 }).notNull(),
   createAt: date().notNull().default("now()"),
   lastOpenedAt: timestamp().notNull().defaultNow(),

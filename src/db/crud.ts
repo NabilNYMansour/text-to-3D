@@ -3,7 +3,7 @@
 import { fontsTable, InsertProject, InsertUser, projectsTable, SelectProject, SelectUser, usersTable } from "./schema";
 import { db } from '.';
 import { and, desc, eq, like, count } from "drizzle-orm";
-import { ControlsType } from "@/lib/constants-and-types";
+import { compressControls, ControlsType, decompressControls } from "@/lib/constants-and-types";
 import { utapi } from "@/uploadthing/server-side";
 import { captureException } from "@sentry/nextjs";
 
@@ -50,12 +50,12 @@ export async function getProjectPayloadBySlug(slug: SelectProject['slug']):
   Promise<Array<{
     clerkId: string,
     name: string,
-    payload: ControlsType,
+    controls: string,
   }>> {
   return await db.select({
     clerkId: projectsTable.clerkId,
     name: projectsTable.name,
-    payload: projectsTable.payload,
+    controls: projectsTable.controls,
   }).from(projectsTable).where(eq(projectsTable.slug, slug));
 }
 
@@ -67,8 +67,8 @@ export async function updateProjectNameBySlug(slug: SelectProject['slug'], name:
   await db.update(projectsTable).set({ name }).where(eq(projectsTable.slug, slug));
 }
 
-export async function updateProjectPayloadBySlug(slug: SelectProject['slug'], payload: SelectProject['payload']) {
-  await db.update(projectsTable).set({ payload }).where(eq(projectsTable.slug, slug));
+export async function updateProjectPayloadBySlug(slug: SelectProject['slug'], payload: ControlsType) {
+  await db.update(projectsTable).set({ controls: compressControls(payload) }).where(eq(projectsTable.slug, slug));
 }
 
 export async function updateLastOpenedAtBySlug(slug: SelectProject['slug']) {
@@ -81,10 +81,10 @@ export async function getUserProjects(
   page: number,
   limit: number,
   latest: boolean = false,
-): Promise<Array<{ slug: string, name: string, payload: ControlsType }>> {
+): Promise<Array<{ slug: string, name: string, controls: string }>> {
   const actualPage = Math.max(page - 1, 0);
   const query = db
-    .select({ slug: projectsTable.slug, name: projectsTable.name, payload: projectsTable.payload })
+    .select({ slug: projectsTable.slug, name: projectsTable.name, controls: projectsTable.controls })
     .from(projectsTable)
     .where(and(eq(projectsTable.clerkId, clerkId), like(projectsTable.name, `%${searchTerm}%`)))
     .limit(limit)

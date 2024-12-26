@@ -2,7 +2,7 @@ import MainApp from "@/components/layout/main-app";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { createProject, getUserProjectsCount } from "@/db/crud";
-import { defaultControls, SearchParams } from "@/lib/constants-and-types";
+import { compressControls, defaultControls, SearchParams } from "@/lib/constants-and-types";
 import { unstable_noStore as noStore } from "next/cache";
 import { decodeJson } from "@/lib/utils";
 import { isUserSyncedWithDB } from "@/lib/server-helpers";
@@ -28,7 +28,7 @@ const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
     clerkId: user.id,
     name: "New Project " + (projectsCount + 1),
     slug: slug,
-    payload: controls,
+    controls: compressControls(controls),
   });
 
   redirect(`project/${slug}`);

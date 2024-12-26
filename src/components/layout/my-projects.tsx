@@ -283,11 +283,11 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
   }
 
   return (
-    <div className="w-full max-w-5xl flex flex-col items-center gap-2">
+    <div className="w-full max-w-5xl flex flex-col items-center gap-2 p-2">
       {latestProjects.length > 0 && <>
-        <h1 className="text-xl font-bold w-full">Recent</h1>
+        <h1 className="text-xl font-bold w-full text-center md:text-start">Recent</h1>
         <div className={cn("w-full flex flex-wrap justify-center gap-2 select-none",
-          latestProjects.length < 3 && "justify-start"
+          latestProjects.length < 3 && "md:justify-start md:ml-5",
         )}
         >
           {latestProjects.map((project) => <ProjectCard
@@ -319,7 +319,7 @@ const MyProjects = ({ projects, latestProjects, deleteProject, updateProjectName
               No projects found
             </div> : <>
             <div className={cn("w-full flex flex-wrap justify-center gap-2 select-none",
-              projects.length < 3 && "justify-start"
+              projects.length < 3 && "md:justify-start md:ml-5"
             )}
             >
               {projects.map((project) => <ProjectCard
