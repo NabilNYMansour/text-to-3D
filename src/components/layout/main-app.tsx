@@ -429,42 +429,42 @@ const GeneralPanel = ({ controls, setControls, setControlsDebounced, userFonts }
       <FontSelectorAndUpdater controls={controls} setControls={setControls} userFonts={userFonts} />
     </InputComponent>
     <InputComponent label="Extrustion">
-      <Slider min={0.1} max={10} step={0.1} defaultValue={[controls.height.value]}
+      <Slider min={controls.height.min} max={controls.height.max} step={controls.height.step} defaultValue={[controls.height.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, height: { ...controls.height, value: value[0] } })}
       />
     </InputComponent>
     <InputComponent label="Curve Segments">
       <Slider
-        min={1}
-        max={32}
-        step={1}
+        min={controls.curveSegments.min}
+        max={controls.curveSegments.max}
+        step={controls.curveSegments.step}
         defaultValue={[controls.curveSegments.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, curveSegments: { ...controls.curveSegments, value: value[0] } })}
       />
     </InputComponent>
     <InputComponent label="Size">
       <Slider
-        min={0.1}
-        max={10}
-        step={0.1}
+        min={controls.size.min}
+        max={controls.size.max}
+        step={controls.size.step}
         defaultValue={[controls.size.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, size: { ...controls.size, value: value[0] } })}
       />
     </InputComponent>
     <InputComponent label="Line Height">
       <Slider
-        min={0}
-        max={2}
-        step={0.01}
+        min={controls.lineHeight.min}
+        max={controls.lineHeight.max}
+        step={controls.lineHeight.step}
         defaultValue={[controls.lineHeight.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, lineHeight: { ...controls.lineHeight, value: value[0] } })}
       />
     </InputComponent>
     <InputComponent label="Letter Spacing">
       <Slider
-        min={-1}
-        max={1}
-        step={0.01}
+        min={controls.letterSpacing.min}
+        max={controls.letterSpacing.max}
+        step={controls.letterSpacing.step}
         defaultValue={[controls.letterSpacing.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, letterSpacing: { ...controls.letterSpacing, value: value[0] } })}
       />
@@ -507,9 +507,9 @@ const MaterialPanel = ({ controls, setControls, setMaterialPanelOpened, material
     {material.props.roughness &&
       <InputComponent label="Roughness">
         <Slider
-          min={0}
-          max={1}
-          step={0.01}
+          min={controls.roughness.min}
+          max={controls.roughness.max}
+          step={controls.roughness.step}
           defaultValue={[controls.roughness.value]}
           onValueChange={(value) => setControls({ ...controls, roughness: { ...controls.roughness, value: value[0] } })}
         />
@@ -517,9 +517,9 @@ const MaterialPanel = ({ controls, setControls, setMaterialPanelOpened, material
     {material.props.metalness &&
       <InputComponent label="Metalness">
         <Slider
-          min={0}
-          max={1}
-          step={0.01}
+          min={controls.metalness.min}
+          max={controls.metalness.max}
+          step={controls.metalness.step}
           defaultValue={[controls.metalness.value]}
           onValueChange={(value) => setControls({ ...controls, metalness: { ...controls.metalness, value: value[0] } })}
         />
@@ -545,36 +545,36 @@ const BevelPanel = ({ controls, setControls, setControlsDebounced }: {
     </InputComponent>
     <InputComponent label="Offset">
       <Slider
-        min={0}
-        max={1}
-        step={0.01}
+        min={controls.bevelOffset.min}
+        max={controls.bevelOffset.max}
+        step={controls.bevelOffset.step}
         defaultValue={[controls.bevelOffset.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, bevelOffset: { ...controls.bevelOffset, value: value[0] } })}
       />
     </InputComponent>
     <InputComponent label="Segments">
       <Slider
-        min={1}
-        max={32}
-        step={1}
+        min={controls.bevelSegments.min}
+        max={controls.bevelSegments.max}
+        step={controls.bevelSegments.step}
         defaultValue={[controls.bevelSegments.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, bevelSegments: { ...controls.bevelSegments, value: value[0] } })}
       />
     </InputComponent>
     <InputComponent label="Size">
       <Slider
-        min={0}
-        max={1}
-        step={0.01}
+        min={controls.bevelSize.min}
+        max={controls.bevelSize.max}
+        step={controls.bevelSize.step}
         defaultValue={[controls.bevelSize.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, bevelSize: { ...controls.bevelSize, value: value[0] } })}
       />
     </InputComponent>
     <InputComponent label="Thickness">
       <Slider
-        min={0}
-        max={1}
-        step={0.01}
+        min={controls.bevelThickness.min}
+        max={controls.bevelThickness.max}
+        step={controls.bevelThickness.step}
         defaultValue={[controls.bevelThickness.value]}
         onValueChange={(value) => setControlsDebounced({ ...controls, bevelThickness: { ...controls.bevelThickness, value: value[0] } })}
       />
@@ -602,7 +602,7 @@ const LightPanel = ({ controls, setControls }: {
         <Slider
           min={0}
           max={2}
-          step={0.01}
+          step={controls.light.step}
           defaultValue={[controls.light.intensity]}
           onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, intensity: value[0] } })}
         />
@@ -612,8 +612,8 @@ const LightPanel = ({ controls, setControls }: {
       </InputComponent>
       <InputComponent label="Light X position">
         <Slider
-          min={controls.light.minMax[0][0]}
-          max={controls.light.minMax[0][1]}
+          min={-100}
+          max={100}
           step={controls.light.step}
           defaultValue={[controls.light.position[0]]}
           onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [value[0], controls.light.position[1], controls.light.position[2]] } })}
@@ -621,8 +621,8 @@ const LightPanel = ({ controls, setControls }: {
       </InputComponent>
       <InputComponent label="Light Y position">
         <Slider
-          min={controls.light.minMax[1][0]}
-          max={controls.light.minMax[1][1]}
+          min={0}
+          max={100}
           step={controls.light.step}
           defaultValue={[controls.light.position[1]]}
           onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [controls.light.position[0], value[0], controls.light.position[2]] } })}
@@ -630,8 +630,8 @@ const LightPanel = ({ controls, setControls }: {
       </InputComponent>
       <InputComponent label="Light Z position">
         <Slider
-          min={controls.light.minMax[2][0]}
-          max={controls.light.minMax[2][1]}
+          min={-100}
+          max={100}
           step={controls.light.step}
           defaultValue={[controls.light.position[2]]}
           onValueChange={(value) => setControls({ ...controls, light: { ...controls.light, position: [controls.light.position[0], controls.light.position[1], value[0]] } })}
@@ -644,9 +644,9 @@ const LightPanel = ({ controls, setControls }: {
       {controls.enableVerticalShadow &&
         <InputComponent label="Shadow Offset">
           <Slider
-            min={-10}
-            max={0}
-            step={0.1}
+            min={controls.verticalShadowOffset.min}
+            max={controls.verticalShadowOffset.max}
+            step={controls.verticalShadowOffset.step}
             defaultValue={[controls.verticalShadowOffset.value]}
             onValueChange={(value) => setControls({ ...controls, verticalShadowOffset: { ...controls.verticalShadowOffset, value: value[0] } })}
           />
@@ -711,18 +711,18 @@ const ScenePanel = ({ controls, setControls, setScenePanelOpened }: {
         </InputComponent>
         <InputComponent label="Roughness">
           <Slider
-            min={0}
-            max={1}
-            step={0.01}
+            min={controls.backdropRoughness.min}
+            max={controls.backdropRoughness.max}
+            step={controls.backdropRoughness.step}
             defaultValue={[controls.backdropRoughness.value]}
             onValueChange={(value) => setControls({ ...controls, backdropRoughness: { ...controls.backdropRoughness, value: value[0] } })}
           />
         </InputComponent>
         <InputComponent label="Metalness">
           <Slider
-            min={0}
-            max={1}
-            step={0.01}
+            min={controls.backdropMetalness.min}
+            max={controls.backdropMetalness.max}
+            step={controls.backdropMetalness.step}
             defaultValue={[controls.backdropMetalness.value]}
             onValueChange={(value) => setControls({ ...controls, backdropMetalness: { ...controls.backdropMetalness, value: value[0] } })}
           />

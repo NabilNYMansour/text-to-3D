@@ -72,7 +72,7 @@ export async function updateProjectPayloadBySlug(slug: SelectProject['slug'], pa
 }
 
 export async function updateLastOpenedAtBySlug(slug: SelectProject['slug']) {
-  await db.update(projectsTable).set({ lastOpenedAt: new Date() }).where(eq(projectsTable.slug, slug));
+  await db.update(projectsTable).set({ lastOpenedAt: new Date().toISOString() }).where(eq(projectsTable.slug, slug));
 }
 
 export async function getUserProjects(

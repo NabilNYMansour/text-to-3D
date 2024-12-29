@@ -51,7 +51,7 @@ export const defaultControls = {
   backdropMetalness: { min: 0, max: 1, step: 0.01, value: 0.5 },
 
   lightEnabled: false,
-  light: { intensity: 1, color: "#ffffff", position: [5, 10, 7], minMax: [[-100, 100], [0, 100], [-100, 100]], step: 0.1 },
+  light: { intensity: 1, color: "#ffffff", position: [5, 10, 7], step: 0.1 },
 
   enableVerticalShadow: true,
   verticalShadowOffset: { min: -10, max: 0, step: 0.1, value: -2.5 },
@@ -112,7 +112,6 @@ export function compressControls(controls: ControlsType): string {
   };
   return btoa(JSON.stringify(valuesOnly));
 }
-
 export function decompressControls(compressed: string): ControlsType {
   const jsonString = atob(compressed);
   if (!jsonString) {

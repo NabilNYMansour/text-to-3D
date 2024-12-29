@@ -1,6 +1,5 @@
-import { config } from "dotenv";
-import { drizzle } from 'drizzle-orm/neon-http';
+import { BetterSQLite3Database, drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
 
-config({ path: ".env.local" }); // or .env.local
-
-export const db = drizzle(process.env.DATABASE_URL!);
+const betterSqlite = new Database('sqlite.db');
+export const db: BetterSQLite3Database = drizzle(betterSqlite);

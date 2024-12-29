@@ -111,20 +111,6 @@ export const defaultTemplate: ControlsType = {
       10,
       7
     ],
-    "minMax": [
-      [
-        -100,
-        100
-      ],
-      [
-        0,
-        100
-      ],
-      [
-        -100,
-        100
-      ]
-    ],
     "step": 0.1
   },
   "enableVerticalShadow": true,
@@ -264,20 +250,6 @@ export const gradientTemplate: ControlsType = {
       10,
       7
     ],
-    "minMax": [
-      [
-        -100,
-        100
-      ],
-      [
-        0,
-        100
-      ],
-      [
-        -100,
-        100
-      ]
-    ],
     "step": 0.1
   },
   "enableVerticalShadow": false,
@@ -408,32 +380,18 @@ export const perspectiveTemplate: ControlsType = {
     "step": 0.01,
     "value": 0.5
   },
-  "lightEnabled": false,
+  "lightEnabled": true,
   "light": {
     "intensity": 1,
     "color": "#ffffff",
     "position": [
-      5,
-      10,
-      7
-    ],
-    "minMax": [
-      [
-        -100,
-        100
-      ],
-      [
-        0,
-        100
-      ],
-      [
-        -100,
-        100
-      ]
+      100,
+      100,
+      100
     ],
     "step": 0.1
   },
-  "enableVerticalShadow": true,
+  "enableVerticalShadow": false,
   "verticalShadowOffset": {
     "min": -10,
     "max": 0,
