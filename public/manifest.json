@@ -1,0 +1,15 @@
+{
+  "name": "Text To 3D",
+  "short_name": "Text To 3D",
+  "start_url": "/",
+  "display": "standalone",
+  "icons": [
+    {
+      "src" : "short-text-logo.png",
+      "sizes": "368x368",
+      "type": "image/png"
+    }
+  ],
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
